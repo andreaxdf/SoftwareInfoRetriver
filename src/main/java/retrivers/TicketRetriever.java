@@ -18,12 +18,13 @@ import java.util.ArrayList;
 public class TicketRetriever {
 
     VersionRetriever versionRetriever;
+    ArrayList<Ticket> tickets;
 
     public TicketRetriever(String projName, String issueType, String status, String resolution) {
         try {
             versionRetriever = new VersionRetriever(projName);
-            ArrayList<Ticket> tickets = retrieveBugTickets(projName, issueType, status, resolution);
-            //TicketUtils.printTickets(tickets);
+            tickets = retrieveBugTickets(projName, issueType, status, resolution);
+            TicketUtils.printTickets(tickets);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -76,13 +77,12 @@ public class TicketRetriever {
                 String creationDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("created").toString();
                 ArrayList<VersionInfo> releases = versionRetriever.getAffectedVersions(issues.getJSONObject(i%1000).getJSONObject("fields").getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
-                //TODO if a ticket does not have a new release after its created date
-                if(!setReleaseInfoInTicket(ticket)) continue;
-                addTicket(ticket, consistentTickets, inconsistentTickets);
+                if(!setReleaseInfoInTicket(ticket)) continue; //Discard a ticket does not have a new release after its created date
+                addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
             }
         } while (i < total);
 
-        adjustInconsistentTickets(inconsistentTickets, consistentTickets);
+        adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV
 
         return consistentTickets;
     }
@@ -92,17 +92,16 @@ public class TicketRetriever {
         double proportionValue = Proportion.computeProportionValue(consistentTickets);
         System.out.println("Proportion value: " + proportionValue);
         for(Ticket ticket: inconsistentTickets) {
-            adjustTicket(ticket, proportionValue);
+            adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
             if(!consistencyCheck(ticket)) {
-                throw new RuntimeException(); //create a new exception for the case when the ticket is not adjusted correctly
+                throw new RuntimeException(); //Create a new exception for the case when the ticket is not adjusted correctly
             }
-            consistentTickets.add(ticket);
+            consistentTickets.add(ticket); //Add the adjusted ticket to the consistent list
         }
-
     }
 
     private void adjustTicket(Ticket ticket, double proportionValue) {
-        //assign the new injected version for the inconsistent ticket as max(0, FV-(FV-OV)*P)
+        //Assign the new injected version for the inconsistent ticket as max(0, FV-(FV-OV)*P)
         VersionInfo OV = ticket.getOpeningRelease();
         VersionInfo FV = ticket.getFixedRelease();
         int newIndex = (int) (FV.getIndex() - (FV.getIndex() - OV.getIndex())*proportionValue);
@@ -113,7 +112,7 @@ public class TicketRetriever {
         ticket.setInjectedRelease(versionRetriever.projVersions.get(newIndex));
     }
 
-    // Check that IV <= OV <= FV and that IV = AV[0]. If one condition is false, the ticket will add to inconsistency tickets
+    //Check that IV <= OV <= FV and that IV = AV[0]. If one condition is false, the ticket will add to inconsistency tickets
     private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets) {
         if(!consistencyCheck(ticket)) {
             inconsistentTickets.add(ticket);
@@ -130,5 +129,9 @@ public class TicketRetriever {
         return (IV != null) &&
                 (IV.getIndex() <= OV.getIndex()) &&
                 (OV.getIndex() <= FV.getIndex());
+    }
+
+    public ArrayList<Ticket> getTickets() {
+        return tickets;
     }
 }

@@ -101,6 +101,7 @@ public class VersionRetriever {
         LocalDate date = LocalDate.parse(strDate);
         VersionInfo newRelease = new VersionInfo(id, name, date);
         releases.add(newRelease);
+        //System.out.println("Version: " + newRelease.getName());
     }
 
 

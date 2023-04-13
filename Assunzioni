@@ -1,4 +1,5 @@
 Assunzioni del progetto:
-- Considero nel calcolo del valore di proportion soltanto gli issue con OV != FV (altrimenti il denominatore sarebbe 0)
-- Arrotondo l'indice della injected release calcolata con proportion per (eccesso/difetto??)
-- Assumo che i ticket risolti nello stesso giorno dell'uscita di una nuova release siano risolti in quella release
+- Considero nel calcolo del valore di proportion soltanto gli issue con OV != FV (altrimenti il denominatore sarebbe 0).
+- Arrotondo l'indice della injected release calcolata con proportion per difetto.
+- Assumo che i ticket risolti nello stesso giorno dell'uscita di una nuova release siano risolti in quella release.
+- Effettuiamo il calcolo di proportion su tutte le repository conosciute, anche quelle successive alla versione alla cui stiamo applicando proportion.
