@@ -17,8 +17,6 @@ public class Main {
 
         TicketRetriever syncopeRetriever = new TicketRetriever("SYNCOPE", issueType, status, resolution);
 
-        TicketRetriever copeRetriever = new TicketRetriever("TAJO", issueType, status, resolution);
-
     }
 
 }
