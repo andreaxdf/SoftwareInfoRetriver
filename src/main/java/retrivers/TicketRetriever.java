@@ -1,15 +1,15 @@
 package retrivers;
 
-import model.VersionInfo;
 import model.Ticket;
-import org.jetbrains.annotations.Nullable;
-import util.JSONUtils;
+import model.VersionInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import util.ColdStart;
+import util.JSONUtils;
 import util.Proportion;
-import util.TicketUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -19,18 +19,37 @@ public class TicketRetriever {
 
     VersionRetriever versionRetriever;
     ArrayList<Ticket> tickets;
+    boolean coldStart = false;
 
-    public TicketRetriever(String projName, String issueType, String status, String resolution) {
+    public TicketRetriever(String projName) {
+        String issueType = "Bug";
+        String status = "closed";
+        String resolution = "fixed";
         try {
             versionRetriever = new VersionRetriever(projName);
             tickets = retrieveBugTickets(projName, issueType, status, resolution);
-            TicketUtils.printTickets(tickets);
+            //TicketUtils.printTickets(tickets);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // Set OV and FV of the ticket. IV will retrieve from AV takes from Jira or takes applying proportion.
+    /**Initialize TicketRetriever for cold start*/
+    public TicketRetriever(String projName, boolean coldStart) {
+        String issueType = "Bug";
+        String status = "closed";
+        String resolution = "fixed";
+        this.coldStart = coldStart;
+        try {
+            versionRetriever = new VersionRetriever(projName);
+            tickets = retrieveBugTickets(projName, issueType, status, resolution);
+            //TicketUtils.printTickets(tickets);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**Set OV and FV of the ticket. IV will retrieve from AV takes from Jira or takes applying proportion.*/
     private boolean setReleaseInfoInTicket(@NotNull Ticket ticket) {
         VersionInfo openingRelease = retrieveRelease(ticket.getCreationDate());
         VersionInfo fixRelease = retrieveRelease(ticket.getResolutionDate());
@@ -82,14 +101,21 @@ public class TicketRetriever {
             }
         } while (i < total);
 
-        adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV
+        if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
 
         return consistentTickets;
     }
 
-    /* Make consistency the inconsistency tickets. A ticket is */
+    /**Make consistency the inconsistency tickets. A ticket is */
     private  void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, ArrayList<Ticket> consistentTickets) {
-        double proportionValue = Proportion.computeProportionValue(consistentTickets);
+
+        double proportionValue;
+
+        if(consistentTickets.size() >= 500) {
+            proportionValue = Proportion.computeProportionValue(consistentTickets);
+        } else {
+            proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());
+        }
         System.out.println("Proportion value: " + proportionValue);
         for(Ticket ticket: inconsistentTickets) {
             adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
@@ -112,7 +138,7 @@ public class TicketRetriever {
         ticket.setInjectedRelease(versionRetriever.projVersions.get(newIndex));
     }
 
-    //Check that IV <= OV <= FV and that IV = AV[0]. If one condition is false, the ticket will add to inconsistency tickets
+    /**Check that IV <= OV <= FV and that IV = AV[0]. If one condition is false, the ticket will add to inconsistency tickets.*/
     private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets) {
         if(!consistencyCheck(ticket)) {
             inconsistentTickets.add(ticket);

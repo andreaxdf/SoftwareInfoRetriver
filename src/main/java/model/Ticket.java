@@ -99,7 +99,7 @@ public class Ticket {
 
         ArrayList<VersionInfo> affectedReleases = new ArrayList<>();
         for (VersionInfo versionInfo : versionRetriever.projVersions) {
-            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() <= this.fixedRelease.getIndex())) {
+            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() < this.fixedRelease.getIndex())) {
                 affectedReleases.add(versionInfo);
             }
         }

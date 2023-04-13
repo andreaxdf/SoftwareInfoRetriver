@@ -48,8 +48,7 @@ public class VersionRetriever {
         }
     }
 
-    /*
-    * Get versions info from issues
+    /**Get versions info from issues
     * */
     public ArrayList<VersionInfo> getAffectedVersions(@NotNull JSONArray versions) {
         String id;
@@ -90,6 +89,7 @@ public class VersionRetriever {
             }
         }
 
+        System.out.println("Versions: " + versionList.size());
         return versionList;
     }
 
