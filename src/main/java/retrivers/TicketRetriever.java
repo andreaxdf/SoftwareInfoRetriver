@@ -107,11 +107,11 @@ public class TicketRetriever {
     }
 
     /**Make consistency the inconsistency tickets. A ticket is */
-    private  void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, ArrayList<Ticket> consistentTickets) {
+    private  void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
 
         double proportionValue;
 
-        if(consistentTickets.size() >= 500) {
+        if(consistentTickets.size() >= 5) {
             proportionValue = Proportion.computeProportionValue(consistentTickets);
         } else {
             proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());
