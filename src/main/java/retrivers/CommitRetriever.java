@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import util.GitUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CommitRetriever {
 
@@ -20,8 +21,8 @@ public class CommitRetriever {
         this.git = new Git(repo);
     }
 
-    public ArrayList<RevCommit> retrieveAssociatedCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) {
-        ArrayList<RevCommit> associatedCommit = new ArrayList<>();
+    private List<RevCommit> retrieveAssociatedCommit(@NotNull List<RevCommit> commits, Ticket ticket) {
+        List<RevCommit> associatedCommit = new ArrayList<>();
         for(RevCommit commit: commits) {
             if(commit.getFullMessage().contains(ticket.getKey())) {
                 associatedCommit.add(commit);
@@ -30,10 +31,10 @@ public class CommitRetriever {
         return associatedCommit;
     }
 
-    public ArrayList<RevCommit> retrieveCommit() throws GitAPIException {
+    public List<RevCommit> retrieveCommit() throws GitAPIException {
         Iterable<RevCommit> commitIterable = git.log().call();
 
-        ArrayList<RevCommit> commits = new ArrayList<>();
+        List<RevCommit> commits = new ArrayList<>();
         for(RevCommit commit: commitIterable) {
             commits.add(commit);
         }
@@ -42,15 +43,15 @@ public class CommitRetriever {
     }
 
     /** Associate the tickets with the commits that reference them. Moreover, discard the tickets that don't have any commits.*/
-    public ArrayList<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> tickets) {
+    public List<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, List<Ticket> tickets) {
         try {
-            ArrayList<RevCommit> commits = commitRetriever.retrieveCommit();
+            List<RevCommit> commits = commitRetriever.retrieveCommit();
             for (Ticket ticket : tickets) {
-                ArrayList<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
+                List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
                 ticket.setAssociatedCommits(associatedCommits);
                 //GitUtils.printCommit(associatedCommits);
             }
-            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
+            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty()/* || (ticket.getOpeningRelease().getIndex() == 0)*/);
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }

@@ -4,11 +4,13 @@ import model.Ticket;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Proportion {
 
+    private Proportion() {}
 
-    public static double computeProportionValue(@NotNull ArrayList<Ticket> consistentTickets) {
+    public static double computeProportionValue(@NotNull List<Ticket> consistentTickets) {
 
         double proportionSum = 0;
         int validatedCount = 0;
@@ -19,11 +21,11 @@ public class Proportion {
             //P = (FV-IV)/(FV-OV)
             if(ticket.getInjectedRelease() == null && ticket.getOpeningRelease() == null && ticket.getFixedRelease() == null)
                 throw new RuntimeException(); //create an exception for inconsistency ticket list: there is an inconsistent ticket in the consistent list
-            int IV = ticket.getInjectedRelease().getIndex();
-            int OV = ticket.getOpeningRelease().getIndex();
-            int FV = ticket.getFixedRelease().getIndex();
-            if(FV!=OV && OV!=IV) {
-                double prop = (1.0) * (FV - IV) / (FV - OV);
+            int iv = ticket.getInjectedRelease().getIndex();
+            int ov = ticket.getOpeningRelease().getIndex();
+            int fv = ticket.getFixedRelease().getIndex();
+            if(fv!=ov && ov!=iv) {
+                double prop = (1.0) * (fv - iv) / (fv - ov);
                 proportionSum = proportionSum + prop;
                 validatedCount++;
                 tickets.add(ticket);

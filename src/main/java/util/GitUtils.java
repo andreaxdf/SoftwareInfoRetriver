@@ -6,9 +6,11 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 public class GitUtils {
+
+    private GitUtils() {}
 
     public static Repository getRepository(String repoPath) {
         try {
@@ -19,7 +21,7 @@ public class GitUtils {
         }
     }
 
-    public static void printCommit(ArrayList<RevCommit> commits) {
+    public static void printCommit(List<RevCommit> commits) {
         for(RevCommit commit: commits) {
             System.out.println("Commit: " + commit.getAuthorIdent().getName());
             System.out.println(commit.getShortMessage());
