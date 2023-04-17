@@ -60,7 +60,7 @@ public class TicketRetriever {
         VersionInfo openingRelease = retrieveRelease(ticket.getCreationDate());
         VersionInfo fixRelease = retrieveRelease(ticket.getResolutionDate());
 
-        if(openingRelease == null || fixRelease == null) // Condition that detect if there is a new version after the creation or the fix of the ticket
+        if((openingRelease == null || fixRelease == null) ) // Condition that detect if there is a new version after the creation or the fix of the ticket
             return false;
 
         ticket.setOpeningRelease(openingRelease);

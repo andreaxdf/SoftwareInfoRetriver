@@ -20,26 +20,6 @@ public class CommitRetriever {
         this.git = new Git(repo);
     }
 
-    /*public void retrieveReleaseInfoForTickets(ArrayList<Ticket> tickets) {
-        try {
-            Iterable<RevCommit> commitIterable = git.log().call();
-
-            ArrayList<RevCommit> commits = new ArrayList<>();
-            for(RevCommit commit: commitIterable) {
-                commits.add(commit);
-            }
-
-            for(Ticket ticket: tickets) {
-                //TODO prendo il commit giusto? Data OpeningVersion > data FixVersion
-                RevCommit commit = retrieveCommit(commits, ticket);
-                if(commit != null) setReleaseInfoInTicket(commit, ticket);
-            }
-
-        } catch (GitAPIException e) {
-            throw new RuntimeException(e);
-        }
-    }*/
-
     public ArrayList<RevCommit> retrieveAssociatedCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) {
         ArrayList<RevCommit> associatedCommit = new ArrayList<>();
         for(RevCommit commit: commits) {
