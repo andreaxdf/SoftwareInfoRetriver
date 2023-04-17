@@ -28,6 +28,12 @@ public class TicketRetriever {
         try {
             versionRetriever = new VersionRetriever(projName);
             tickets = retrieveBugTickets(projName, issueType, status, resolution);
+            System.out.println("Tickets estratti da " + projName + ": " + tickets.size());
+            int count = 0;
+            for(Ticket ticket: tickets) {
+                count += ticket.getAssociatedCommits().size();
+            }
+            System.out.println("Commits estratti da " + projName + ": " + count);
             //TicketUtils.printTickets(tickets);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -103,7 +109,9 @@ public class TicketRetriever {
 
         if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
 
-        return consistentTickets;
+        CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase());
+
+        return commitRetriever.associateTicketAndCommit(commitRetriever, consistentTickets);
     }
 
     /**Make consistency the inconsistency tickets. A ticket is */

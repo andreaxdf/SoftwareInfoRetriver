@@ -6,7 +6,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import util.GitUtils;
 
 import java.util.ArrayList;
@@ -60,6 +59,23 @@ public class CommitRetriever {
         }
 
         return commits;
+    }
+
+    /** Associate the tickets with the commits that reference them. Moreover, discard the tickets that don't have any commits.*/
+    public ArrayList<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> tickets) {
+        try {
+            ArrayList<RevCommit> commits = commitRetriever.retrieveCommit();
+            for (Ticket ticket : tickets) {
+                ArrayList<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
+                ticket.setAssociatedCommits(associatedCommits);
+                //GitUtils.printCommit(associatedCommits);
+            }
+            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
+
+        return tickets;
     }
 
 }

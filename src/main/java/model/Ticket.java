@@ -70,6 +70,10 @@ public class Ticket {
         return fixedRelease;
     }
 
+    public ArrayList<RevCommit> getAssociatedCommits() {
+        return associatedCommits;
+    }
+
     public void setFixedRelease(VersionInfo fixedRelease) {
         this.fixedRelease = fixedRelease;
         computeAffectedRelease();
