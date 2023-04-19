@@ -31,6 +31,7 @@ public class TicketRetriever {
         try {
             versionRetriever = new VersionRetriever(projName);
             tickets = retrieveBugTickets(projName, issueType, status, resolution);
+            TicketUtils.printTickets(tickets);
             System.out.println("Tickets estratti da " + projName + ": " + tickets.size());
             int count = 0;
             for(Ticket ticket: tickets) {
@@ -58,17 +59,12 @@ public class TicketRetriever {
     }
 
     /**Set OV and FV of the ticket. IV will retrieve from AV takes from Jira or takes applying proportion.*/
-    private boolean setReleaseInfoInTicket(@NotNull Ticket ticket) {
+    private void setReleaseInfoInTicket(@NotNull Ticket ticket) {
         VersionInfo openingRelease = retrieveNextRelease(ticket.getCreationDate());
         VersionInfo fixRelease = retrieveNextRelease(ticket.getResolutionDate());
 
-        if((openingRelease == null || fixRelease == null) ) // Condition that detect if there is a new version after the creation or the fix of the ticket
-            return false;
-
         ticket.setOpeningRelease(openingRelease);
         ticket.setFixedRelease(fixRelease);
-
-        return true;
     }
 
     private @Nullable VersionInfo retrieveNextRelease(LocalDate localDate) {
@@ -106,25 +102,33 @@ public class TicketRetriever {
                 String creationDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("created").toString();
                 List<VersionInfo> releases = versionRetriever.getAffectedVersions(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
-                if(!setReleaseInfoInTicket(ticket)) continue; //Discard a ticket does not have a new release after its created date
+                setReleaseInfoInTicket(ticket);
+                if(ticket.getInjectedRelease() != null && (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())) continue;
                 addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
-
             }
         } while (i < total);
 
         if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
 
-        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet.
+        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
 
         CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase());
 
-        return commitRetriever.associateTicketAndCommit(commitRetriever, consistentTickets);
+        TicketUtils.printTickets(consistentTickets);
+        System.out.println("\nTickets estratti prima di togliere commit da " + projName + ": " + consistentTickets.size() + "\n");
+
+        System.out.println("\n------------------------------------------------------------------------------\n");
+
+        TicketUtils.sortTickets(consistentTickets);
+
+        return commitRetriever.associateTicketAndCommit(versionRetriever, commitRetriever, consistentTickets);
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/
     private void discardInvalidTicket(ArrayList<Ticket> tickets) {
         tickets.removeIf(ticket -> ticket.getOpeningRelease().getIndex() > ticket.getFixedRelease().getIndex() ||   //Discard if OV > FV
-                ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex()); //Discard if IV >= OV
+                ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex() || //Discard if IV >= OV
+                (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if there is a new version after the creation or the fix of the ticket
     }
 
     /**Make consistency the inconsistency tickets. A ticket is */
@@ -164,7 +168,7 @@ public class TicketRetriever {
         ticket.setInjectedRelease(versionRetriever.projVersions.get(newIndex));
     }
 
-    /**Check that IV <= OV <= FV and that IV = AV[0]. If one condition is false, the ticket will add to inconsistency tickets.*/
+    /**Check that the ticket is consistent. If it isn't, the ticket will add to inconsistency tickets.*/
     private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets) {
         if(isNotConsistent(ticket)) {
             inconsistentTickets.add(ticket);

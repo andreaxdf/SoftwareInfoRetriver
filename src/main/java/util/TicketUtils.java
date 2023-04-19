@@ -1,8 +1,11 @@
 package util;
 
 import model.Ticket;
+import model.VersionInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class TicketUtils {
@@ -20,4 +23,7 @@ public class TicketUtils {
         }
     }
 
+    public static void sortTickets(ArrayList<Ticket> tickets) {
+        tickets.sort(Comparator.comparing(Ticket::getCreationDate));
+    }
 }

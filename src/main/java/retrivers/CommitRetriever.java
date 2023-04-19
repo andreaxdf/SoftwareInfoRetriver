@@ -1,6 +1,7 @@
 package retrivers;
 
 import model.Ticket;
+import model.VersionInfo;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -29,7 +30,7 @@ public class CommitRetriever {
         this.git = new Git(repo);
     }
 
-    private List<RevCommit> retrieveAssociatedCommit(@NotNull List<RevCommit> commits, Ticket ticket) {
+    private List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) {
         List<RevCommit> associatedCommit = new ArrayList<>();
         for(RevCommit commit: commits) {
             if(RegularExpression.matchRegex(commit.getFullMessage(), ticket.getKey())) {
@@ -39,25 +40,39 @@ public class CommitRetriever {
         return associatedCommit;
     }
 
-    public List<RevCommit> retrieveCommit() throws GitAPIException {
+    private List<RevCommit> retrieveAssociatedCommits2(@NotNull List<RevCommit> commits, Ticket ticket) {
+        List<RevCommit> associatedCommit = new ArrayList<>();
+        for(RevCommit commit: commits) {
+            if(RegularExpression.matchRegex(commit.getFullMessage(), ticket.getKey())) {
+                associatedCommit.add(commit);
+            }
+        }
+        return associatedCommit;
+    }
+
+    public List<RevCommit> retrieveCommit(VersionRetriever versionRetriever) throws GitAPIException {
         Iterable<RevCommit> commitIterable = git.log().call();
 
         List<RevCommit> commits = new ArrayList<>();
+        List<VersionInfo> projVersions = versionRetriever.getProjVersions();
+
         for(RevCommit commit: commitIterable) {
-            commits.add(commit);
+            if (!GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()).isAfter(projVersions.get(projVersions.size()-1).getDate())){
+                commits.add(commit);
+            }
         }
 
         return commits;
     }
 
     /** Associate the tickets with the commits that reference them. Moreover, discard the tickets that don't have any commits.*/
-    public List<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, List<Ticket> tickets) {
+    public List<Ticket> associateTicketAndCommit(VersionRetriever versionRetriever, CommitRetriever commitRetriever, List<Ticket> tickets) {
         try {
-            List<RevCommit> commits = commitRetriever.retrieveCommit();
+            List<RevCommit> commits = commitRetriever.retrieveCommit(versionRetriever);
             for (Ticket ticket : tickets) {
-                List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
+                List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommits(commits, ticket);
+
                 ticket.setAssociatedCommits(associatedCommits);
-                //GitUtils.printCommit(associatedCommits);
             }
             tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
         } catch (GitAPIException e) {
