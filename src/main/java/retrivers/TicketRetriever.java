@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import util.ColdStart;
 import util.JSONUtils;
 import util.Proportion;
+import util.TicketUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -36,7 +37,6 @@ public class TicketRetriever {
                 count += ticket.getAssociatedCommits().size();
             }
             System.out.println("Commits estratti da " + projName + ": " + count);
-            //TicketUtils.printTickets(tickets);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -108,14 +108,23 @@ public class TicketRetriever {
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
                 if(!setReleaseInfoInTicket(ticket)) continue; //Discard a ticket does not have a new release after its created date
                 addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
+
             }
         } while (i < total);
 
         if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
 
+        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet.
+
         CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase());
 
         return commitRetriever.associateTicketAndCommit(commitRetriever, consistentTickets);
+    }
+
+    /**Discard tickets that have OV > FV or that have IV=OV*/
+    private void discardInvalidTicket(ArrayList<Ticket> tickets) {
+        tickets.removeIf(ticket -> ticket.getOpeningRelease().getIndex() > ticket.getFixedRelease().getIndex() ||   //Discard if OV > FV
+                ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex()); //Discard if IV >= OV
     }
 
     /**Make consistency the inconsistency tickets. A ticket is */
@@ -142,7 +151,12 @@ public class TicketRetriever {
         //Assign the new injected version for the inconsistent ticket as max(0, FV-(FV-OV)*P)
         VersionInfo ov = ticket.getOpeningRelease();
         VersionInfo fv = ticket.getFixedRelease();
-        int newIndex = (int) (fv.getIndex() - (fv.getIndex() - ov.getIndex())*proportionValue);
+        int newIndex;
+        if(fv.getIndex() == ov.getIndex()) {
+            newIndex = (int) Math.floor(fv.getIndex() - proportionValue);
+        } else {
+            newIndex = (int) Math.floor(fv.getIndex() - (fv.getIndex() - ov.getIndex()) * proportionValue);
+        }
         if(newIndex < 0) {
             ticket.setInjectedRelease(versionRetriever.projVersions.get(0));
             return;
