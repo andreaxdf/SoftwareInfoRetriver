@@ -108,13 +108,12 @@ public class TicketRetriever {
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
                 if(!setReleaseInfoInTicket(ticket)) continue; //Discard a ticket does not have a new release after its created date
                 addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
-
             }
         } while (i < total);
 
         if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
 
-        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet.
+        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
 
         CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase());
 
