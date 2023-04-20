@@ -1,9 +1,13 @@
 package main;
 
+import model.ReleaseCommits;
 import model.Ticket;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import retrivers.CommitRetriever;
 import retrivers.TicketRetriever;
+import util.TicketUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 public class Main {
@@ -16,9 +20,23 @@ public class Main {
 
         List<Ticket> bookTickets = bookkeeperRetriever.getTickets();
 
-        CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/bookkeeper");
+        CommitRetriever bookCommitRetriever = bookkeeperRetriever.getCommitRetriever();
 
         //commitRetriever.retrieveChangesFromTickets(bookTickets);
+
+        try {
+            List<ReleaseCommits> releaseCommitsList = bookCommitRetriever.getReleaseCommits(bookkeeperRetriever.getVersionRetriever(), TicketUtils.getAssociatedCommit(bookTickets));
+            printReleaseCommit(releaseCommitsList);
+        } catch (GitAPIException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private static void printReleaseCommit(List<ReleaseCommits> releaseCommitsList) {
+        for(ReleaseCommits rc: releaseCommitsList) {
+            System.out.println(rc.getJavaClasses().keySet());
+        }
     }
 
 }

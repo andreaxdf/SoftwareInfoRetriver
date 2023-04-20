@@ -19,8 +19,9 @@ import java.util.List;
 
 public class TicketRetriever {
 
-    public static final String FIELDS = "fields";
+    static final String FIELDS = "fields";
     VersionRetriever versionRetriever;
+    CommitRetriever commitRetriever;
     List<Ticket> tickets;
     boolean coldStart = false;
 
@@ -112,14 +113,7 @@ public class TicketRetriever {
 
         discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
 
-        CommitRetriever commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase());
-
-        TicketUtils.printTickets(consistentTickets);
-        System.out.println("\nTickets estratti prima di togliere commit da " + projName + ": " + consistentTickets.size() + "\n");
-
-        System.out.println("\n------------------------------------------------------------------------------\n");
-
-        TicketUtils.sortTickets(consistentTickets);
+        commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
 
         return commitRetriever.associateTicketAndCommit(versionRetriever, commitRetriever, consistentTickets);
     }
@@ -189,5 +183,13 @@ public class TicketRetriever {
 
     public List<Ticket> getTickets() {
         return tickets;
+    }
+
+    public CommitRetriever getCommitRetriever() {
+        return commitRetriever;
+    }
+
+    public VersionRetriever getVersionRetriever() {
+        return versionRetriever;
     }
 }

@@ -108,5 +108,4 @@ public class VersionRetriever {
         //System.out.println("Version: " + newRelease.getName());
     }
 
-
 }
