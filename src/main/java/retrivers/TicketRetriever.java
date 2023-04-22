@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import util.ColdStart;
 import util.JSONUtils;
 import util.Proportion;
-import util.TicketUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,34 +25,28 @@ public class TicketRetriever {
     boolean coldStart = false;
 
     public TicketRetriever(String projName) {
+        init(projName);
+    }
+
+    /**Initialize TicketRetriever for cold start*/
+    public TicketRetriever(String projName, boolean coldStart) {
+        this.coldStart = coldStart;
+        init(projName);
+    }
+
+    private void init(String projName) {
         String issueType = "Bug";
         String status = "closed";
         String resolution = "fixed";
         try {
             versionRetriever = new VersionRetriever(projName);
             tickets = retrieveBugTickets(projName, issueType, status, resolution);
-            TicketUtils.printTickets(tickets);
             System.out.println("Tickets estratti da " + projName + ": " + tickets.size());
             int count = 0;
             for(Ticket ticket: tickets) {
                 count += ticket.getAssociatedCommits().size();
             }
-            System.out.println("Commits estratti da " + projName + ": " + count);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**Initialize TicketRetriever for cold start*/
-    public TicketRetriever(String projName, boolean coldStart) {
-        String issueType = "Bug";
-        String status = "closed";
-        String resolution = "fixed";
-        this.coldStart = coldStart;
-        try {
-            versionRetriever = new VersionRetriever(projName);
-            tickets = retrieveBugTickets(projName, issueType, status, resolution);
-            //TicketUtils.printTickets(tickets);
+            System.out.println("Commits associati a tickets estratti da " + projName + ": " + count);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -115,7 +108,7 @@ public class TicketRetriever {
 
         commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
 
-        return commitRetriever.associateTicketAndCommit(versionRetriever, commitRetriever, consistentTickets);
+        return commitRetriever.associateTicketAndCommit(consistentTickets);
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/
