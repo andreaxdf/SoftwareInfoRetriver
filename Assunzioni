@@ -5,3 +5,4 @@ Assunzioni del progetto:
 - Calcolo la fixedVersion come la versione successiva alla resolutionDate del ticket su Jira.
 - Effettuo il calcolo di proportion su tutte le repository conosciute, anche quelle successive alla versione alla cui stiamo applicando proportion.
 - Considero la data di rilascio delle versioni per ordinarle.
+- Se in un commit sono menzionati più tickets, considero il commit come risolutore di tutti i ticket menzionati.

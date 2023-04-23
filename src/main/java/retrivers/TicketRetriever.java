@@ -1,18 +1,17 @@
 package retrivers;
 
 import model.Ticket;
-import model.VersionInfo;
+import model.Version;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import util.ColdStart;
 import util.JSONUtils;
 import util.Proportion;
+import util.VersionUtil;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,22 +52,12 @@ public class TicketRetriever {
     }
 
     /**Set OV and FV of the ticket. IV will retrieve from AV takes from Jira or takes applying proportion.*/
-    private void setReleaseInfoInTicket(@NotNull Ticket ticket) {
-        VersionInfo openingRelease = retrieveNextRelease(ticket.getCreationDate());
-        VersionInfo fixRelease = retrieveNextRelease(ticket.getResolutionDate());
+    private void setReleaseInTicket(@NotNull Ticket ticket) {
+        Version openingRelease = VersionUtil.retrieveNextRelease(versionRetriever, ticket.getCreationDate());
+        Version fixRelease = VersionUtil.retrieveNextRelease(versionRetriever, ticket.getResolutionDate());
 
         ticket.setOpeningRelease(openingRelease);
         ticket.setFixedRelease(fixRelease);
-    }
-
-    private @Nullable VersionInfo retrieveNextRelease(LocalDate localDate) {
-        for(VersionInfo versionInfo : versionRetriever.projVersions) {
-            LocalDate releaseDate = versionInfo.getDate();
-            if(!releaseDate.isBefore(localDate)) {
-                return versionInfo;
-            }
-        }
-        return null;
     }
 
     public  @NotNull List<Ticket> retrieveBugTickets(String projName, String issueType, String status, String resolution) throws IOException, JSONException {
@@ -94,10 +83,14 @@ public class TicketRetriever {
                 String key = issues.getJSONObject(i%1000).get("key").toString();
                 String resolutionDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("resolutiondate").toString();
                 String creationDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("created").toString();
-                List<VersionInfo> releases = versionRetriever.getAffectedVersions(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
+                List<Version> releases = versionRetriever.getAffectedVersions(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
-                setReleaseInfoInTicket(ticket);
-                if(ticket.getInjectedRelease() != null && (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())) continue;
+                setReleaseInTicket(ticket);
+                //Discard tickets that are incorrect or that are after the last release
+                if (ticket.getOpeningRelease() == null ||
+                        (ticket.getInjectedRelease() != null &&
+                                (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())))
+                    continue;
                 addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
             }
         } while (i < total);
@@ -140,8 +133,8 @@ public class TicketRetriever {
 
     private void adjustTicket(Ticket ticket, double proportionValue) {
         //Assign the new injected version for the inconsistent ticket as max(0, FV-(FV-OV)*P)
-        VersionInfo ov = ticket.getOpeningRelease();
-        VersionInfo fv = ticket.getFixedRelease();
+        Version ov = ticket.getOpeningRelease();
+        Version fv = ticket.getFixedRelease();
         int newIndex;
         if(fv.getIndex() == ov.getIndex()) {
             newIndex = (int) Math.floor(fv.getIndex() - proportionValue);
@@ -165,9 +158,9 @@ public class TicketRetriever {
     }
 
     private static boolean isNotConsistent(Ticket ticket) {
-        VersionInfo iv = ticket.getInjectedRelease();
-        VersionInfo ov = ticket.getOpeningRelease();
-        VersionInfo fv = ticket.getFixedRelease();
+        Version iv = ticket.getInjectedRelease();
+        Version ov = ticket.getOpeningRelease();
+        Version fv = ticket.getFixedRelease();
 
         return (iv == null) ||
                 (iv.getIndex() > ov.getIndex()) ||

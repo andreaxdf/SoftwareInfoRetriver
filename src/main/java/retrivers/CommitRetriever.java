@@ -1,8 +1,6 @@
 package retrivers;
 
-import model.ReleaseCommits;
-import model.Ticket;
-import model.VersionInfo;
+import model.*;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -18,14 +16,12 @@ import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.jetbrains.annotations.NotNull;
 import util.GitUtils;
 import util.RegularExpression;
+import util.VersionUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CommitRetriever {
 
@@ -56,13 +52,16 @@ public class CommitRetriever {
         Iterable<RevCommit> commitIterable = git.log().call();
 
         List<RevCommit> commits = new ArrayList<>();
-        List<VersionInfo> projVersions = versionRetriever.getProjVersions();
+        List<Version> projVersions = versionRetriever.getProjVersions();
+        Version lastVersion = projVersions.get(projVersions.size()-1);
 
         for(RevCommit commit: commitIterable) {
-            if (!GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()).isAfter(projVersions.get(projVersions.size()-1).getDate())){
+            if (!GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()).isAfter(lastVersion.getDate())){
                 commits.add(commit);
             }
         }
+
+        commits.sort(Comparator.comparing(o -> o.getCommitterIdent().getWhen()));
 
         this.commitList = commits;
 
@@ -92,23 +91,23 @@ public class CommitRetriever {
 
     public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
         List<ReleaseCommits> releaseCommits = new ArrayList<>();
-        LocalDate date = LocalDate.of(1900, 1, 1);
-        for(VersionInfo versionInfo: versionRetriever.getProjVersions()) {
-            ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, date);
+        LocalDate lowerBound = LocalDate.of(1900, 1, 1);
+        for(Version version : versionRetriever.getProjVersions()) {
+            ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, version, lowerBound);
             if(releaseCommit != null) {
-                Map<String, String> javaClasses = getClasses(releaseCommit.getLastCommit());
+                List<JavaClass> javaClasses = getClasses(releaseCommit.getLastCommit());
                 releaseCommit.setJavaClasses(javaClasses);
                 releaseCommits.add(releaseCommit);
             }
-            date = versionInfo.getDate();
+            lowerBound = version.getDate();
         }
 
         return releaseCommits;
     }
 
-    private Map<String, String> getClasses(RevCommit commit) throws IOException {
+    private List<JavaClass> getClasses(RevCommit commit) throws IOException {
 
-        Map<String, String> javaClasses = new HashMap<>();
+        List<JavaClass> javaClasses = new ArrayList<>();
 
         RevTree tree = commit.getTree();    //We get the tree of the files and the directories that were belong to the repository when commit was pushed
         TreeWalk treeWalk = new TreeWalk(this.repo);    //We use a TreeWalk to iterate over all files in the Tree recursively
@@ -119,7 +118,14 @@ public class CommitRetriever {
             //We are keeping only Java classes that are not involved in tests
             if(treeWalk.getPathString().contains(".java") && !treeWalk.getPathString().contains("/test/")) {
                 //We are retrieving (name class, content class) couples
-                javaClasses.put(treeWalk.getPathString(), new String(this.repo.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8));
+                Version release = VersionUtil.retrieveNextRelease(versionRetriever, GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()));
+
+                if(release == null) throw new RuntimeException();
+
+                javaClasses.add(new JavaClass(
+                        treeWalk.getPathString(),
+                        new String(this.repo.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8),
+                        release));
             }
         }
         treeWalk.close();
@@ -129,13 +135,14 @@ public class CommitRetriever {
 
     private void retrieveChanges(List<RevCommit> commits) {
         for(RevCommit commit: commits) {
-            Map<String, String> classMap = retrieveChanges(commit);
+            List<JavaClassChange> javaClassChangeList = retrieveChanges(commit);
+
+
         }
     }
 
-
-    private Map<String, String> retrieveChanges(RevCommit commit) {
-        Map<String, String> classMap = new HashMap<>();
+    private List<JavaClassChange> retrieveChanges(RevCommit commit) {
+        List<JavaClassChange> javaClassChangeList = new ArrayList<>();
         try {
             ObjectReader reader = git.getRepository().newObjectReader();
             CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
@@ -150,14 +157,21 @@ public class CommitRetriever {
             List<DiffEntry> entries = diffFormatter.scan(oldTreeIter, newTreeIter);
 
             for (DiffEntry entry : entries) {
-                classMap.put(entry.getNewPath(), new String(this.repo.open(entry.getNewId().toObjectId()).getBytes(), StandardCharsets.UTF_8));
-                System.out.println(entry.getNewPath() + " " + entry.getChangeType());
+                JavaClass javaClass = new JavaClass(
+                        entry.getNewPath(),
+                        new String(this.repo.open(entry.getNewId().toObjectId()).getBytes(), StandardCharsets.UTF_8),
+                        VersionUtil.retrieveNextRelease(
+                                versionRetriever,
+                                GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()))
+                );
+                JavaClassChange newJavaClassChange = new JavaClassChange(javaClass, entry.getChangeType());
+                javaClassChangeList.add(newJavaClassChange);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return classMap;
+        return javaClassChangeList;
     }
 
 

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 
-public class VersionInfo {
+public class Version {
     String id;
     int index;
     String name;
@@ -30,7 +30,7 @@ public class VersionInfo {
         this.index = index;
     }
 
-    public VersionInfo(String id, String name, @NotNull LocalDate date) {
+    public Version(String id, String name, @NotNull LocalDate date) {
         this.id = id;
         this.name = name;
         this.date = date;

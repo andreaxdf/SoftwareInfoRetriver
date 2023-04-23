@@ -1,11 +1,12 @@
 package retrivers;
 
-import model.VersionInfo;
+import model.Version;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import util.JSONUtils;
+import util.VersionUtil;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -17,9 +18,9 @@ import java.util.Objects;
 public class VersionRetriever {
 
     public static final String RELEASE_DATE = "releaseDate";
-    List<VersionInfo> projVersions;
+    List<Version> projVersions;
 
-    public List<VersionInfo> getProjVersions() {
+    public List<Version> getProjVersions() {
         return projVersions;
     }
 
@@ -28,6 +29,7 @@ public class VersionRetriever {
         //Ignores releases with missing dates
         try {
             getVersions(projName);
+            VersionUtil.printVersion(projVersions);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -46,23 +48,23 @@ public class VersionRetriever {
         setIndex(this.projVersions);
     }
 
-    private void setIndex(@NotNull List<VersionInfo> versions) {
+    private void setIndex(@NotNull List<Version> versions) {
         int i = 0;
-        for(VersionInfo versionInfo : versions) {
-            versionInfo.setIndex(i);
+        for(Version version : versions) {
+            version.setIndex(i);
             i++;
         }
     }
 
     /**Get versions info from issues
     * */
-    public List<VersionInfo> getAffectedVersions(@NotNull JSONArray versions) {
+    public List<Version> getAffectedVersions(@NotNull JSONArray versions) {
         String id;
-        List<VersionInfo> affectedVersions = new ArrayList<>();
+        List<Version> affectedVersions = new ArrayList<>();
         for (int i = 0; i < versions.length(); i++ ) {
             if(versions.getJSONObject(i).has(RELEASE_DATE) && versions.getJSONObject(i).has("id")) {
                 id = versions.getJSONObject(i).get("id").toString();
-                VersionInfo v = searchVersion(id);
+                Version v = searchVersion(id);
                 if(v == null) throw new RuntimeException(); //TODO Create a new exception or ignore the case with v == null
                 affectedVersions.add(v);
             }
@@ -70,8 +72,8 @@ public class VersionRetriever {
         return affectedVersions;
     }
 
-    private @Nullable VersionInfo searchVersion(String id) {
-        for(VersionInfo version: this.projVersions) {
+    private @Nullable Version searchVersion(String id) {
+        for(Version version: this.projVersions) {
             if(Objects.equals(version.getId(), id)) {
                 return version;
             }
@@ -79,8 +81,8 @@ public class VersionRetriever {
         return null;
     }
 
-    private @NotNull List<VersionInfo> createVersionArray(@NotNull JSONArray versions) {
-        List<VersionInfo> versionList = new ArrayList<>();
+    private @NotNull List<Version> createVersionArray(@NotNull JSONArray versions) {
+        List<Version> versionList = new ArrayList<>();
         for (int i = 0; i < versions.length(); i++ ) {
             String name = "";
             String id = "";
@@ -97,13 +99,13 @@ public class VersionRetriever {
         return versionList;
     }
 
-    private void sortRelease(@NotNull List<VersionInfo> releases) {
-        releases.sort(Comparator.comparing(VersionInfo::getDate));
+    private void sortRelease(@NotNull List<Version> releases) {
+        releases.sort(Comparator.comparing(Version::getDate));
     }
 
-    public void addRelease(String strDate, String name, String id, @NotNull List<VersionInfo> releases) {
+    public void addRelease(String strDate, String name, String id, @NotNull List<Version> releases) {
         LocalDate date = LocalDate.parse(strDate);
-        VersionInfo newRelease = new VersionInfo(id, name, date);
+        Version newRelease = new Version(id, name, date);
         releases.add(newRelease);
         //System.out.println("Version: " + newRelease.getName());
     }

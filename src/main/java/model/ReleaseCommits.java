@@ -5,14 +5,18 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import java.util.List;
 import java.util.Map;
 
+
 public class ReleaseCommits {
 
-    private VersionInfo release;
+    private Version release;
     private List<RevCommit> commits;
     private RevCommit lastCommit;
-    private Map<String, String> javaClasses;  //Classes that were present when the release was deployed; they are represented by their name and their content
+    /**Classes that were present when the release was deployed; they are the classes presented in the last commit
+     *
+     */
+    private List<JavaClass> javaClasses;
 
-    public ReleaseCommits(VersionInfo release, List<RevCommit> commits, RevCommit lastCommit) {
+    public ReleaseCommits(Version release, List<RevCommit> commits, RevCommit lastCommit) {
         this.release = release;
         this.commits = commits;
         this.lastCommit = lastCommit;
@@ -22,14 +26,14 @@ public class ReleaseCommits {
     /**
      * @return the release
      */
-    public VersionInfo getRelease() {
+    public Version getRelease() {
         return release;
     }
 
     /**
      * @param release the release to set
      */
-    public void setRelease(VersionInfo release) {
+    public void setRelease(Version release) {
         this.release = release;
     }
 
@@ -64,14 +68,14 @@ public class ReleaseCommits {
     /**
      * @return the javaClasses
      */
-    public Map<String, String> getJavaClasses() {
+    public List<JavaClass> getJavaClasses() {
         return javaClasses;
     }
 
     /**
      * @param javaClasses the javaClasses to set
      */
-    public void setJavaClasses(Map<String, String> javaClasses) {
+    public void setJavaClasses(List<JavaClass> javaClasses) {
         this.javaClasses = javaClasses;
     }
 

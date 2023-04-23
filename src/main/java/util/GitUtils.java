@@ -1,7 +1,7 @@
 package util;
 
 import model.ReleaseCommits;
-import model.VersionInfo;
+import model.Version;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -24,7 +24,7 @@ public class GitUtils {
         return LocalDate.parse(dateFormatter.format(date));
     }
 
-    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, VersionInfo release, LocalDate firstDate) {
+    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();
         LocalDate lastDate = release.getDate();
@@ -33,7 +33,7 @@ public class GitUtils {
             LocalDate commitDate = commit.getCommitterIdent().getWhen().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             //if firstDate < commitDate <= lastDate then add the commit in matchingCommits list
-            if(commitDate.isAfter(firstDate) && (commitDate.isBefore(lastDate) || commitDate.equals(lastDate))) {
+            if(commitDate.isAfter(firstDate) && !commitDate.isAfter(lastDate)) {
                 matchingCommits.add(commit);
             }
 
@@ -44,7 +44,6 @@ public class GitUtils {
         RevCommit lastCommit = getLastCommit(matchingCommits);
 
         return new ReleaseCommits(release, matchingCommits, lastCommit);
-
     }
 
     private static RevCommit getLastCommit(List<RevCommit> commitsList) {

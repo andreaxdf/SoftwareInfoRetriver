@@ -1,7 +1,6 @@
 package util;
 
 import model.Ticket;
-import model.VersionInfo;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 

@@ -21,6 +21,9 @@ public class ExecutionFlow {
         try {
             List<ReleaseCommits> releaseCommitsList = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
             printReleaseCommit(releaseCommitsList);
+            for(ReleaseCommits releaseCommits: releaseCommitsList) {
+                System.out.println("Version: " + releaseCommits.getRelease().getName() + " Java classes: " + releaseCommits.getJavaClasses().size());
+            }
         } catch (GitAPIException | IOException e) {
             throw new RuntimeException(e);
         }
