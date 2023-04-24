@@ -35,6 +35,7 @@ public class JavaClassUtil {
             if(Objects.equals(javaClass.getName(), className.getJavaClassName())) {
                 javaClass.getMetrics().setClassBuggyness();
                 javaClass.addCommit(commit);
+
                 return;
             }
         }

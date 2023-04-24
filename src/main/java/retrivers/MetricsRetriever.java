@@ -10,6 +10,7 @@ import util.GitUtils;
 import util.JavaClassUtil;
 import util.VersionUtil;
 
+import java.io.IOException;
 import java.util.List;
 
 public class MetricsRetriever {
@@ -43,9 +44,67 @@ public class MetricsRetriever {
         }
     }
 
-    public static void computeMetrics(List<ReleaseCommits> releaseCommitsList) {
+    public static void computeMetrics(List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) {
 
         addSizeLabel(releaseCommitsList);
+        try {
+            computeLocData(releaseCommitsList, commitRetriever);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    private static void computeLocData(List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) throws IOException {
+        for(ReleaseCommits rc: releaseCommitsList) {
+            for (JavaClass javaClass : rc.getJavaClasses()) {
+                commitRetriever.computeAddedAndDeletedLinesList(javaClass);
+                computeLocAndChurnMetrics(javaClass);
+            }
+        }
+    }
+
+    private static void computeLocAndChurnMetrics(JavaClass javaClass) {
+
+        int sumLOC = 0;
+        int maxLOC = 0;
+        double avgLOC = 0;
+        int churn = 0;
+        int maxChurn = 0;
+        double avgChurn = 0;
+
+        for(int i=0; i<javaClass.getMetrics().getAddedLinesList().size(); i++) {
+
+            int currentLOC = javaClass.getMetrics().getAddedLinesList().get(i);
+            int currentDiff = Math.abs(javaClass.getMetrics().getAddedLinesList().get(i) - javaClass.getMetrics().getDeletedLinesList().get(i));
+
+            sumLOC = sumLOC + currentLOC;
+            churn = churn + currentDiff;
+
+            if(currentLOC > maxLOC) {
+                maxLOC = currentLOC;
+            }
+            if(currentDiff > maxChurn) {
+                maxChurn = currentDiff;
+            }
+
+        }
+
+        //If a class has 0 revisions, its AvgLocAdded and AvgChurn are 0 (see initialization above).
+        if(!javaClass.getMetrics().getAddedLinesList().isEmpty()) {
+            avgLOC = 1.0*sumLOC/javaClass.getMetrics().getAddedLinesList().size();
+        }
+        if(!javaClass.getMetrics().getAddedLinesList().isEmpty()) {
+            avgChurn = 1.0*churn/javaClass.getMetrics().getAddedLinesList().size();
+        }
+
+        javaClass.getMetrics().setLocAdded(sumLOC);
+        javaClass.getMetrics().setMaxLocAdded(maxLOC);
+        javaClass.getMetrics().setAvgLocAdded(avgLOC);
+        javaClass.getMetrics().setChurn(churn);
+        javaClass.getMetrics().setMaxChurn(maxChurn);
+        javaClass.getMetrics().setAvgChurn(avgChurn);
 
     }
 

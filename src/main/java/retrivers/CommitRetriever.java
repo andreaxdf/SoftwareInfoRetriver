@@ -38,7 +38,7 @@ public class CommitRetriever {
         this.versionRetriever = versionRetriever;
     }
 
-    private List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) {
+    private @NotNull List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) {
         List<RevCommit> associatedCommit = new ArrayList<>();
         for(RevCommit commit: commits) {
             if(RegularExpression.matchRegex(commit.getFullMessage(), ticket.getKey())) {
@@ -75,7 +75,7 @@ public class CommitRetriever {
      * @param tickets: tickets list that must be associate to the relative commits
      * @return the modified list
      */
-    public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
+    public List<Ticket> associateTicketAndCommit(@NotNull List<Ticket> tickets) {
         try {
             List<RevCommit> commits = this.retrieveCommit();
             for (Ticket ticket : tickets) {
@@ -91,7 +91,7 @@ public class CommitRetriever {
         return tickets;
     }
 
-    public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
+    public List<ReleaseCommits> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
         List<ReleaseCommits> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
         for(Version version : versionRetriever.getProjVersions()) {
@@ -107,7 +107,7 @@ public class CommitRetriever {
         return releaseCommits;
     }
 
-    private List<JavaClass> getClasses(RevCommit commit) throws IOException {
+    private @NotNull List<JavaClass> getClasses(@NotNull RevCommit commit) throws IOException {
 
         List<JavaClass> javaClasses = new ArrayList<>();
 
@@ -122,7 +122,7 @@ public class CommitRetriever {
                 //We are retrieving (name class, content class) couples
                 Version release = VersionUtil.retrieveNextRelease(versionRetriever, GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()));
 
-                if(release == null) throw new RuntimeException();
+                if(release == null) throw new RuntimeException(); //Throw an exception if there isn't a version after the commit
 
                 javaClasses.add(new JavaClass(
                         treeWalk.getPathString(),
@@ -135,7 +135,7 @@ public class CommitRetriever {
         return javaClasses;
     }
 
-    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
+    public List<ChangedJavaClass> retrieveChanges(@NotNull RevCommit commit) {
         List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
         try {
             ObjectReader reader = git.getRepository().newObjectReader();
@@ -161,12 +161,38 @@ public class CommitRetriever {
         return changedJavaClassList;
     }
 
-    /*This method initializes two lists:
+    public String getContentOfClassByCommit(String className, RevCommit commit) throws IOException {
+
+        RevTree tree = commit.getTree();
+        // Tree walk to iterate over all files in the Tree recursively
+
+        TreeWalk treeWalk = new TreeWalk(this.repo);
+
+        treeWalk.addTree(tree);
+
+        treeWalk.setRecursive(true);
+
+        while (treeWalk.next()) {
+            // We are keeping only Java classes that are not involved in tests
+            if (treeWalk.getPathString().equals(className)) {
+                String content = new String(this.repo.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8);
+                treeWalk.close();
+                return content;
+            }
+        }
+
+        treeWalk.close();
+        // If here it mean no class with name className is present
+        return null;
+    }
+
+    /**This method initializes two lists:
      * - List of numbers of added lines by each commit; every entry is associated to one specific commit
      * - List of numbers of deleted lines by each commit; every entry is associated to one specific commit
      * These lists will be used to calculate sum, max & avg*/
-    public void computeAddedAndDeletedLinesList(JavaClass javaClass) throws IOException {
+    public void computeAddedAndDeletedLinesList(@NotNull JavaClass javaClass) throws IOException {
 
+        //TODO is it correctly? Can I compute only the difference between the two release with the last commit?
         for(RevCommit comm : javaClass.getCommits()) {
             try(DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
 
@@ -180,22 +206,16 @@ public class CommitRetriever {
                     if(entry.getNewPath().equals(javaClass.getName())) {
                         javaClass.getMetrics().getAddedLinesList().add(getAddedLines(diffFormatter, entry));
                         javaClass.getMetrics().getDeletedLinesList().add(getDeletedLines(diffFormatter, entry));
-
                     }
-
                 }
 
             } catch(ArrayIndexOutOfBoundsException e) {
                 //commit has no parents: skip this commit, return an empty list and go on
-
             }
-
         }
-
-
     }
 
-    private int getAddedLines(DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
+    private int getAddedLines(@NotNull DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
 
         int addedLines = 0;
         for(Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
@@ -205,7 +225,7 @@ public class CommitRetriever {
 
     }
 
-    private int getDeletedLines(DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
+    private int getDeletedLines(@NotNull DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
 
         int deletedLines = 0;
         for(Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
@@ -214,6 +234,4 @@ public class CommitRetriever {
         return deletedLines;
 
     }
-
-
 }

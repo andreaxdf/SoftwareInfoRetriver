@@ -25,7 +25,7 @@ public class ExecutionFlow {
             List<ReleaseCommits> releaseCommitsList = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
             printReleaseCommit(projName, releaseCommitsList);
             MetricsRetriever.addBuggynessLabel(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
-            MetricsRetriever.computeMetrics(releaseCommitsList);
+            MetricsRetriever.computeMetrics(releaseCommitsList, commitRetriever);
             FileCreator.writeOnCsv(projName, releaseCommitsList, CsvNamesEnum.BUGGY, 0);
         } catch (GitAPIException | IOException e) {
             throw new RuntimeException(e);
