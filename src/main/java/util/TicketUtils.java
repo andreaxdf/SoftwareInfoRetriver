@@ -23,11 +23,11 @@ public class TicketUtils {
         }
     }
 
-    public static void sortTickets(ArrayList<Ticket> tickets) {
+    public static void sortTickets(@NotNull ArrayList<Ticket> tickets) {
         tickets.sort(Comparator.comparing(Ticket::getCreationDate));
     }
 
-    public static List<RevCommit> getAssociatedCommit(List<Ticket> tickets) {
+    public static @NotNull List<RevCommit> getAssociatedCommit(@NotNull List<Ticket> tickets) {
         List<RevCommit> commits = new ArrayList<>();
 
         for(Ticket t: tickets) {

@@ -3,7 +3,6 @@ package model;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.List;
-import java.util.Map;
 
 
 public class ReleaseCommits {
