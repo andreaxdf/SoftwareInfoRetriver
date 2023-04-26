@@ -30,6 +30,13 @@ public class VersionUtil {
         return null;
     }
 
+    /**
+     * Retrieve the ReleaseCommits in the rcList with version immediately after the parameter date.
+     * @param versionRetriever Project version retriever
+     * @param date Commit date; we use it for retrieve the version of the commit.
+     * @param rcList List of the project ReleaseCommits
+     * @return The ReleaseCommits with version immediately after the parameter date
+     */
     public static @Nullable ReleaseCommits retrieveCommitRelease(VersionRetriever versionRetriever, LocalDate date, @NotNull List<ReleaseCommits> rcList) {
         Version version = retrieveNextRelease(versionRetriever, date);
 

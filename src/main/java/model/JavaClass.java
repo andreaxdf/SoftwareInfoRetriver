@@ -12,7 +12,7 @@ public class JavaClass {
     private final Version release;
     private final List<RevCommit> commits = new ArrayList<>();
 
-    private Metrics metrics = new Metrics();
+    private final Metrics metrics = new Metrics();
 
     public JavaClass(String name, String content, Version release) {
         this.name = name;
@@ -40,7 +40,4 @@ public class JavaClass {
         return metrics;
     }
 
-    public void setMetrics(Metrics metrics) {
-        this.metrics = metrics;
-    }
 }

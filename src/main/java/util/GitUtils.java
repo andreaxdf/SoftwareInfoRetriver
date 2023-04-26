@@ -24,6 +24,13 @@ public class GitUtils {
         return LocalDate.parse(dateFormatter.format(date));
     }
 
+    /**
+     * Create a ReleaseCommits of the version passed. Then, associate all commits that have firstDate < commitDate <= lastDate in the release, where the lastDate is the releasedDate of the version.
+     * @param commitsList List of the all commits in the project.
+     * @param release Version used to create the ReleaseCommits.
+     * @param firstDate The releasedDate of the previous version. For the first version use a lowerBoundDate.
+     * @return The ReleaseCommits created.
+     */
     public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();

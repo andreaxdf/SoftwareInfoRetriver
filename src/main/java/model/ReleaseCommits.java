@@ -14,6 +14,7 @@ public class ReleaseCommits {
      *
      */
     private List<JavaClass> javaClasses;
+    private int buggyClasses;
 
     public ReleaseCommits(Version release, List<RevCommit> commits, RevCommit lastCommit) {
         this.release = release;
@@ -78,4 +79,11 @@ public class ReleaseCommits {
         this.javaClasses = javaClasses;
     }
 
+    public int getBuggyClasses() {
+        return buggyClasses;
+    }
+
+    public void setBuggyClasses(int buggyClasses) {
+        this.buggyClasses = buggyClasses;
+    }
 }

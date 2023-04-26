@@ -4,6 +4,7 @@ import enums.CsvNamesEnum;
 import model.JavaClass;
 import model.ReleaseCommits;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -24,7 +25,17 @@ public class FileCreator {
 
         String csvNameStr = enumToString(csvEnum, csvIndex);
 
-        try(FileWriter fw = new FileWriter(projName + csvNameStr + ".csv")) {
+        String pathname = projName + csvNameStr + ".csv";
+
+        File file = new File(pathname);
+
+        if(file.exists()) {
+            if(!file.delete()) {
+                throw new IOException(); //Exception: file deletion impossible
+            }
+        }
+
+        try(FileWriter fw = new FileWriter(pathname)) {
 
             fw.write("VERSION," +
                     "JAVA_CLASS," +
@@ -35,7 +46,9 @@ public class FileCreator {
                     "CHURN," +
                     "MAX_CHURN," +
                     "AVG_CHURN," +
-                    "IS_BUGGY");
+                    "FIXED_DEFECTS," +
+                    "NUMBER_OF_COMMITS," +
+                    "IS_BUGGY,");
 
             int count;
 
@@ -53,24 +66,16 @@ public class FileCreator {
                     fw.write(javaClass.getMetrics().getChurn() + ",");
                     fw.write(javaClass.getMetrics().getMaxChurn() + ",");
                     fw.write(javaClass.getMetrics().getAvgChurn() + ",");
+                    fw.write(javaClass.getMetrics().getFixedDefects() + ",");
+                    fw.write(javaClass.getCommits().size() + ",");
                     fw.write(javaClass.getMetrics().isBuggy());
-                    /*cell1.setCellValue(javaClass.getRelease().getId());
-                    cell2.setCellValue(javaClass.getSize());
-                    cell3.setCellValue(javaClass.getNr());
-                    cell4.setCellValue(javaClass.getnAuth());
-                    cell5.setCellValue(javaClass.getLocAdded());
-                    cell6.setCellValue(javaClass.getMaxLocAdded());
-                    cell7.setCellValue(javaClass.getAvgLocAdded());
-                    cell8.setCellValue(javaClass.getChurn());
-                    cell9.setCellValue(javaClass.getMaxChurn());
-                    cell10.setCellValue(javaClass.getAvgChurn());*/
 
                     if(javaClass.getMetrics().isBuggyness()) {
                         count++;
                     }
                 }
 
-                System.out.println("Numero di classi buggy for " + rc.getRelease().getName() + ": " + count);
+                rc.setBuggyClasses(count);
             }
         }
     }

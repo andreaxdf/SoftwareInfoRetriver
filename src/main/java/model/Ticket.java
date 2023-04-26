@@ -2,6 +2,7 @@ package model;
 
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import retrivers.VersionRetriever;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public class Ticket {
     Version injectedRelease;
     VersionRetriever versionRetriever;
     List<RevCommit> associatedCommits;
+    RevCommit lastCommit;
 
     public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, List<Version> affectedReleases, @NotNull VersionRetriever versionRetriever) {
         this.creationDate = LocalDate.parse(creationDate.substring(0, 10));
@@ -45,6 +47,19 @@ public class Ticket {
 
     public void setAssociatedCommits(List<RevCommit> associatedCommits) {
         this.associatedCommits = associatedCommits;
+
+        if(associatedCommits.isEmpty()) return;
+
+        RevCommit com = associatedCommits.get(0);
+        for(RevCommit commit: associatedCommits){
+            if(commit.getCommitterIdent().getWhen().after(com.getCommitterIdent().getWhen())) com = commit;
+        }
+
+        this.lastCommit = com;
+    }
+
+    public RevCommit getLastCommit() {
+        return lastCommit;
     }
 
     public LocalDate getResolutionDate() {

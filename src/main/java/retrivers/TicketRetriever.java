@@ -89,7 +89,8 @@ public class TicketRetriever {
                 //Discard tickets that are incorrect or that are after the last release
                 if (ticket.getOpeningRelease() == null ||
                         (ticket.getInjectedRelease() != null &&
-                                (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())))
+                                (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())) ||
+                        ticket.getFixedRelease() == null)
                     continue;
                 addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
             }

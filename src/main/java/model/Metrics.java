@@ -5,16 +5,14 @@ import java.util.List;
 
 public class Metrics {
 
+    private final LOCMetrics addedLOCMetrics = new LOCMetrics();
+    private final LOCMetrics deletedLOCMetrics = new LOCMetrics();
+    private final LOCMetrics churnLOCMetrics = new LOCMetrics();
     private boolean buggyness = false;
     private int size;
     private final List<Integer> addedLinesOfCodeList = new ArrayList<>();
     private final List<Integer> deletedLinesOfCodeList = new ArrayList<>();
-    private int maxLocAdded;
-    private int locAdded;
-    private double avgLocAdded;
-    private int churn;
-    private int maxChurn;
-    private double avgChurn;
+    private int fixedDefects = 0;
 
     public Metrics() {}
 
@@ -48,51 +46,90 @@ public class Metrics {
         return deletedLinesOfCodeList;
     }
 
+    public void setMaxLocDeleted(int maxLocAdded) {
+        this.addedLOCMetrics.maxLoc = maxLocAdded;
+    }
+
+    public int getMaxLocDeleted() {
+        return addedLOCMetrics.maxLoc;
+    }
+
+    public void setLocDeleted(int locAdded) {
+        this.addedLOCMetrics.loc = locAdded;
+    }
+
+    public int getLocDeleted() {
+        return addedLOCMetrics.loc;
+    }
+
+    public void setAvgLocDeleted(double avgLocAdded) {
+        this.addedLOCMetrics.avgLoc = avgLocAdded;
+    }
+
+    public double getAvgLocDeleted() {
+        return addedLOCMetrics.avgLoc;
+    }
+
     public void setMaxLocAdded(int maxLocAdded) {
-        this.maxLocAdded = maxLocAdded;
+        this.addedLOCMetrics.maxLoc = maxLocAdded;
     }
 
     public int getMaxLocAdded() {
-        return maxLocAdded;
+        return addedLOCMetrics.maxLoc;
     }
 
     public void setLocAdded(int locAdded) {
-        this.locAdded = locAdded;
+        this.addedLOCMetrics.loc = locAdded;
     }
 
     public int getLocAdded() {
-        return locAdded;
+        return addedLOCMetrics.loc;
     }
 
     public void setAvgLocAdded(double avgLocAdded) {
-        this.avgLocAdded = avgLocAdded;
+        this.addedLOCMetrics.avgLoc = avgLocAdded;
     }
 
     public double getAvgLocAdded() {
-        return avgLocAdded;
+        return addedLOCMetrics.avgLoc;
     }
 
     public void setChurn(int churn) {
-        this.churn = churn;
+        this.churnLOCMetrics.loc = churn;
     }
 
     public int getChurn() {
-        return churn;
+        return this.churnLOCMetrics.loc;
     }
 
     public void setMaxChurn(int maxChurn) {
-        this.maxChurn = maxChurn;
+        this.churnLOCMetrics.maxLoc = maxChurn;
     }
 
     public int getMaxChurn() {
-        return maxChurn;
+        return this.churnLOCMetrics.maxLoc;
     }
 
     public void setAvgChurn(double avgChurn) {
-        this.avgChurn = avgChurn;
+        this.churnLOCMetrics.avgLoc = avgChurn;
     }
 
     public double getAvgChurn() {
-        return avgChurn;
+        return this.churnLOCMetrics.avgLoc;
     }
+
+    public int getFixedDefects() {
+        return fixedDefects;
+    }
+
+    public void updateFixedDefects() {
+        this.fixedDefects = fixedDefects + 1;
+    }
+
+    private static class LOCMetrics {
+        private int maxLoc;
+        private int loc;
+        private double avgLoc;
+    }
+
 }
