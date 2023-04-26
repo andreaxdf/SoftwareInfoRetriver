@@ -4,6 +4,7 @@ import enums.CsvNamesEnum;
 import model.ReleaseCommits;
 import model.Ticket;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.jetbrains.annotations.NotNull;
 import retrivers.CommitRetriever;
 import retrivers.MetricsRetriever;
 import retrivers.TicketRetriever;
@@ -14,7 +15,9 @@ import java.util.List;
 
 public class ExecutionFlow {
 
-    public ExecutionFlow(String projName) {
+    private ExecutionFlow() {}
+
+    public static void collectData(String projName) {
         TicketRetriever ticketRetriever = new TicketRetriever(projName);
 
         List<Ticket> tickets = ticketRetriever.getTickets();
@@ -33,7 +36,7 @@ public class ExecutionFlow {
         }
     }
 
-    private static void printReleaseCommit(String projName, List<ReleaseCommits> releaseCommitsList) {
+    private static void printReleaseCommit(String projName, @NotNull List<ReleaseCommits> releaseCommitsList) {
         for(ReleaseCommits rc: releaseCommitsList) {
             System.out.println(projName + " version: " + rc.getRelease().getName() + ";" +
                     " Commits: " + rc.getCommits().size() + ";" +

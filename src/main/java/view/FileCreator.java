@@ -3,6 +3,7 @@ package view;
 import enums.CsvNamesEnum;
 import model.JavaClass;
 import model.ReleaseCommits;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,7 +11,11 @@ import java.io.IOException;
 import java.util.List;
 public class FileCreator {
 
-    private static String enumToString(CsvNamesEnum csvEnum, int csvIndex) {
+
+
+    private FileCreator() {}
+
+    private static String enumToString(@NotNull CsvNamesEnum csvEnum, int csvIndex) {
 
         return switch (csvEnum) {
             case TRAINING -> "_TR" + csvIndex;
@@ -29,10 +34,8 @@ public class FileCreator {
 
         File file = new File(pathname);
 
-        if(file.exists()) {
-            if(!file.delete()) {
-                throw new IOException(); //Exception: file deletion impossible
-            }
+        if(file.exists() && !file.delete()) {
+            throw new IOException(); //Exception: file deletion impossible
         }
 
         try(FileWriter fw = new FileWriter(pathname)) {
@@ -43,6 +46,9 @@ public class FileCreator {
                     "LOC_ADDED," +
                     "MAX_LOC_ADDED," +
                     "AVG_LOC_ADDED," +
+                    "LOC_DELETED," +
+                    "MAX_LOC_DELETED," +
+                    "AVG_LOC_DELETED," +
                     "CHURN," +
                     "MAX_CHURN," +
                     "AVG_CHURN," +
@@ -63,6 +69,9 @@ public class FileCreator {
                     fw.write(javaClass.getMetrics().getLocAdded() + ",");
                     fw.write(javaClass.getMetrics().getMaxLocAdded() + ",");
                     fw.write(javaClass.getMetrics().getAvgLocAdded() + ",");
+                    fw.write(javaClass.getMetrics().getLocDeleted() + ",");
+                    fw.write(javaClass.getMetrics().getMaxLocDeleted() + ",");
+                    fw.write(javaClass.getMetrics().getAvgLocDeleted() + ",");
                     fw.write(javaClass.getMetrics().getChurn() + ",");
                     fw.write(javaClass.getMetrics().getMaxChurn() + ",");
                     fw.write(javaClass.getMetrics().getAvgChurn() + ",");

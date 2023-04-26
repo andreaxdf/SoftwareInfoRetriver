@@ -95,7 +95,6 @@ public class VersionRetriever {
             }
         }
 
-        System.out.println("Versions: " + versionList.size());
         return versionList;
     }
 
@@ -107,7 +106,6 @@ public class VersionRetriever {
         LocalDate date = LocalDate.parse(strDate);
         Version newRelease = new Version(id, name, date);
         releases.add(newRelease);
-        //System.out.println("Version: " + newRelease.getName());
     }
 
 }

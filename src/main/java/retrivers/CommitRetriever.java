@@ -101,7 +101,7 @@ public class CommitRetriever {
         return tickets;
     }
 
-    public List<ReleaseCommits> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
+    public List<ReleaseCommits> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {
 
         List<ReleaseCommits> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
@@ -149,9 +149,7 @@ public class CommitRetriever {
 
     public List<ChangedJavaClass> retrieveChanges(@NotNull RevCommit commit) {
         List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
-        try {
-
-            DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
+        try(DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
 
             RevCommit parentComm = commit.getParent(0);
 
@@ -179,7 +177,7 @@ public class CommitRetriever {
         return changedJavaClassList;
     }
 
-    public String getContentOfClassByCommit(String className, RevCommit commit) throws IOException {
+    public String getContentOfClassByCommit(String className, @NotNull RevCommit commit) throws IOException {
 
         RevTree tree = commit.getTree();
         // Tree walk to iterate over all files in the Tree recursively
@@ -221,7 +219,6 @@ public class CommitRetriever {
                 List<DiffEntry> diffs = diffFormatter.scan(parentComm.getTree(), comm.getTree());
                 for(DiffEntry entry : diffs) {
                     if(entry.getNewPath().equals(javaClass.getName())) {
-                        int n = getAddedLines(diffFormatter, entry);
                         javaClass.getMetrics().getAddedLinesList().add(getAddedLines(diffFormatter, entry));
                         javaClass.getMetrics().getDeletedLinesList().add(getDeletedLines(diffFormatter, entry));
                         break;

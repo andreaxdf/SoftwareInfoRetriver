@@ -11,6 +11,8 @@ import java.util.List;
 
 public class VersionUtil {
 
+    private VersionUtil() {}
+
     public static void printVersion(List<Version> versionList) {
         for(Version version: versionList) {
             System.out.println("Version: "

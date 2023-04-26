@@ -74,10 +74,4 @@ public class GitUtils {
         }
     }
 
-    public static void printCommit(List<RevCommit> commits) {
-        for(RevCommit commit: commits) {
-            System.out.println("Commit: " + commit.getAuthorIdent().getName());
-            System.out.println(commit.getShortMessage());
-        }
-    }
 }

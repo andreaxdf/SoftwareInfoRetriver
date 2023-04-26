@@ -23,7 +23,7 @@ public class TicketUtils {
         }
     }
 
-    public static void sortTickets(@NotNull ArrayList<Ticket> tickets) {
+    public static void sortTickets(@NotNull List<Ticket> tickets) {
         tickets.sort(Comparator.comparing(Ticket::getCreationDate));
     }
 
