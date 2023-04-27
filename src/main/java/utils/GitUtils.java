@@ -1,6 +1,6 @@
 package utils;
 
-import model.ReleaseCommits;
+import model.ReleaseInfo;
 import model.Version;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -31,7 +31,7 @@ public class GitUtils {
      * @param firstDate The releasedDate of the previous version. For the first version use a lowerBoundDate.
      * @return The ReleaseCommits created.
      */
-    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
+    public static ReleaseInfo getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();
         LocalDate lastDate = release.getDate();
@@ -50,7 +50,7 @@ public class GitUtils {
 
         RevCommit lastCommit = getLastCommit(matchingCommits);
 
-        return new ReleaseCommits(release, matchingCommits, lastCommit);
+        return new ReleaseInfo(release, matchingCommits, lastCommit);
     }
 
     private static RevCommit getLastCommit(List<RevCommit> commitsList) {

@@ -1,6 +1,6 @@
 package utils;
 
-import model.ReleaseCommits;
+import model.ReleaseInfo;
 import model.Version;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,10 +39,10 @@ public class VersionUtil {
      * @param rcList List of the project ReleaseCommits
      * @return The ReleaseCommits with version immediately after the parameter date
      */
-    public static @Nullable ReleaseCommits retrieveCommitRelease(VersionRetriever versionRetriever, LocalDate date, @NotNull List<ReleaseCommits> rcList) {
+    public static @Nullable ReleaseInfo retrieveCommitRelease(VersionRetriever versionRetriever, LocalDate date, @NotNull List<ReleaseInfo> rcList) {
         Version version = retrieveNextRelease(versionRetriever, date);
 
-        for(ReleaseCommits rc: rcList) {
+        for(ReleaseInfo rc: rcList) {
             if(rc.getRelease() == version) return rc;
         }
 

@@ -99,12 +99,12 @@ public class CommitRetriever {
         }
     }
 
-    public List<ReleaseCommits> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {
+    public List<ReleaseInfo> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {
 
-        List<ReleaseCommits> releaseCommits = new ArrayList<>();
+        List<ReleaseInfo> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
         for(Version version : versionRetriever.getProjVersions()) {
-            ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, version, lowerBound);
+            ReleaseInfo releaseCommit = GitUtils.getCommitsOfRelease(commits, version, lowerBound);
             if(releaseCommit != null) {
                 List<JavaClass> javaClasses = getClasses(releaseCommit.getLastCommit());
                 releaseCommit.setJavaClasses(javaClasses);
