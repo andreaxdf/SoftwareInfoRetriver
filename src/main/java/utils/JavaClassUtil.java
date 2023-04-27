@@ -1,4 +1,4 @@
-package util;
+package utils;
 
 import model.ChangedJavaClass;
 import model.JavaClass;
@@ -42,16 +42,20 @@ public class JavaClassUtil {
         }
     }
 
-    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, @NotNull RevCommit lastCommit, List<ChangedJavaClass> classChangedList, List<ReleaseCommits> releaseCommitsList) {
-        ReleaseCommits releaseCommits = VersionUtil.retrieveCommitRelease(
-                versionRetriever,
-                GitUtils.castToLocalDate(lastCommit.getCommitterIdent().getWhen()),
-                releaseCommitsList);
+    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, @NotNull List<RevCommit> commits, List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) {
 
-        if (releaseCommits != null) {
+        for(RevCommit commit: commits){
+            List<ChangedJavaClass> classChangedList = commitRetriever.retrieveChanges(commit);
+            ReleaseCommits releaseCommits = VersionUtil.retrieveCommitRelease(
+                    versionRetriever,
+                    GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()),
+                    releaseCommitsList);
 
-            for (ChangedJavaClass javaClass : classChangedList) {
-                updateFixedDefects(releaseCommits, javaClass.getJavaClassName());
+            if (releaseCommits != null) {
+
+                for (ChangedJavaClass javaClass : classChangedList) {
+                    updateFixedDefects(releaseCommits, javaClass.getJavaClassName());
+                }
             }
         }
     }

@@ -13,10 +13,10 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.jetbrains.annotations.NotNull;
-import util.GitUtils;
-import util.JavaClassUtil;
-import util.RegularExpression;
-import util.VersionUtil;
+import utils.GitUtils;
+import utils.JavaClassUtil;
+import utils.RegularExpression;
+import utils.VersionUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -75,7 +75,7 @@ public class CommitRetriever {
      * @param tickets: tickets list that must be associate to the relative commits
      * @return the modified list
      */
-    public List<Ticket> associateTicketAndCommit(@NotNull List<Ticket> tickets) {
+    public void associateTicketAndCommit(@NotNull List<Ticket> tickets) {
         try {
             List<RevCommit> commits = this.retrieveCommit();
             for (Ticket ticket : tickets) {
@@ -97,8 +97,6 @@ public class CommitRetriever {
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }
-
-        return tickets;
     }
 
     public List<ReleaseCommits> getReleaseCommits(@NotNull VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {

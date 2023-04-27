@@ -1,4 +1,4 @@
-package util;
+package utils;
 
 import model.Ticket;
 import org.eclipse.jgit.revwalk.RevCommit;

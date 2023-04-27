@@ -7,3 +7,4 @@ Assunzioni del progetto:
 - Considero la data di rilascio delle versioni per ordinarle.
 - Se in un commit sono menzionati più tickets, considero il commit come risolutore di tutti i ticket menzionati.
 - Per il calcolo delle LOC aggiunte, considero soltanto le linee di codice derivanti da modifiche della classe e non dalla creazione. Quindi le LOC iniziali non sono considerate.
+- Calcolo il valore di incremental proportion utilizzando tutti i tickets precedenti al ticket che sto considerando.

@@ -28,8 +28,11 @@ public class ExecutionFlow {
             System.out.println("\n" + projName + " - NUMERO DI COMMIT: " + commitRetriever.retrieveCommit().size() + "\n");
             List<ReleaseCommits> releaseCommitsList = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
             MetricsRetriever.computeBuggynessAndFixedDefects(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
-            MetricsRetriever.computeMetrics(releaseCommitsList, commitRetriever);
+            MetricsRetriever.computeMetrics(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
             FileCreator.writeOnCsv(projName, releaseCommitsList, CsvNamesEnum.BUGGY, 0);
+            for(ReleaseCommits releaseCommits: releaseCommitsList) {
+
+            }
             printReleaseCommit(projName, releaseCommitsList);
         } catch (GitAPIException | IOException e) {
             throw new RuntimeException(e);

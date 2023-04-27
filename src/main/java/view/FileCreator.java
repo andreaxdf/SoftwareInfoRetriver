@@ -54,6 +54,7 @@ public class FileCreator {
                     "AVG_CHURN," +
                     "FIXED_DEFECTS," +
                     "NUMBER_OF_COMMITS," +
+                    "NUMBER_OF_AUTHORS," +
                     "IS_BUGGY,");
 
             int count;
@@ -63,21 +64,22 @@ public class FileCreator {
                 for(JavaClass javaClass: rc.getJavaClasses()) {
                     fw.write("\n");
 
-                    fw.write(rc.getRelease().getIndex() + ",");
-                    fw.write(javaClass.getName() + ",");
-                    fw.write(javaClass.getMetrics().getSize() + ",");
-                    fw.write(javaClass.getMetrics().getLocAdded() + ",");
-                    fw.write(javaClass.getMetrics().getMaxLocAdded() + ",");
-                    fw.write(javaClass.getMetrics().getAvgLocAdded() + ",");
-                    fw.write(javaClass.getMetrics().getLocDeleted() + ",");
-                    fw.write(javaClass.getMetrics().getMaxLocDeleted() + ",");
-                    fw.write(javaClass.getMetrics().getAvgLocDeleted() + ",");
-                    fw.write(javaClass.getMetrics().getChurn() + ",");
-                    fw.write(javaClass.getMetrics().getMaxChurn() + ",");
-                    fw.write(javaClass.getMetrics().getAvgChurn() + ",");
-                    fw.write(javaClass.getMetrics().getFixedDefects() + ",");
-                    fw.write(javaClass.getCommits().size() + ",");
-                    fw.write(javaClass.getMetrics().isBuggy());
+                    fw.write(rc.getRelease().getIndex() + ","); //VERSION
+                    fw.write(javaClass.getName() + ","); //JAVA_CLASS
+                    fw.write(javaClass.getMetrics().getSize() + ","); //SIZE
+                    fw.write(javaClass.getMetrics().getLocAdded() + ","); //LOC_ADDED
+                    fw.write(javaClass.getMetrics().getMaxLocAdded() + ","); //MAX_LOC_ADDED
+                    fw.write(javaClass.getMetrics().getAvgLocAdded() + ","); //AVG_LOC_ADDED
+                    fw.write(javaClass.getMetrics().getLocDeleted() + ","); //LOC_DELETED
+                    fw.write(javaClass.getMetrics().getMaxLocDeleted() + ","); //MAX_LOC_DELETED
+                    fw.write(javaClass.getMetrics().getAvgLocDeleted() + ","); //AVG_LOC_DELETED
+                    fw.write(javaClass.getMetrics().getChurn() + ","); //CHURN
+                    fw.write(javaClass.getMetrics().getMaxChurn() + ","); //MAX_CHURN
+                    fw.write(javaClass.getMetrics().getAvgChurn() + ","); //AVG_CHURN
+                    fw.write(javaClass.getMetrics().getFixedDefects() + ","); //FIXED_DEFECTS
+                    fw.write(javaClass.getCommits().size() + ","); //NUMBER_OF_COMMITS
+                    fw.write(javaClass.getMetrics().getnAuth() + ","); //NUMBER_OF_AUTHORS
+                    fw.write(javaClass.getMetrics().isBuggy()); //IS_BUGGY
 
                     if(javaClass.getMetrics().isBuggyness()) {
                         count++;

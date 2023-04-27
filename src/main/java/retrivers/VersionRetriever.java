@@ -5,8 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import util.JSONUtils;
-import util.VersionUtil;
+import utils.JSONUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -29,7 +28,7 @@ public class VersionRetriever {
         //Ignores releases with missing dates
         try {
             getVersions(projName);
-            VersionUtil.printVersion(projVersions);
+            //VersionUtil.printVersion(projVersions);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

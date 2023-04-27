@@ -6,13 +6,13 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import util.ColdStart;
-import util.JSONUtils;
-import util.Proportion;
-import util.VersionUtil;
+import utils.JSONUtils;
+import utils.VersionUtil;
+import utils.Proportion;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class TicketRetriever {
@@ -39,13 +39,13 @@ public class TicketRetriever {
         String resolution = "fixed";
         try {
             versionRetriever = new VersionRetriever(projName);
-            tickets = retrieveBugTickets(projName, issueType, status, resolution);
+            tickets = retrieveBugTickets(projName, issueType, status, resolution);/*
             System.out.println("Tickets estratti da " + projName + ": " + tickets.size());
             int count = 0;
             for(Ticket ticket: tickets) {
                 count += ticket.getAssociatedCommits().size();
             }
-            System.out.println("Commits associati a tickets estratti da " + projName + ": " + count);
+            System.out.println("Commits associati a tickets estratti da " + projName + ": " + count);*/
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -96,13 +96,15 @@ public class TicketRetriever {
             }
         } while (i < total);
 
-        if(!coldStart) adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
-
+        if(!coldStart) {
+            consistentTickets.sort(Comparator.comparing(Ticket::getResolutionDate));
+            adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
+            commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
+            commitRetriever.associateTicketAndCommit(consistentTickets);
+        }
         discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
 
-        commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
-
-        return commitRetriever.associateTicketAndCommit(consistentTickets);
+        return consistentTickets;
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/
@@ -112,24 +114,31 @@ public class TicketRetriever {
                 (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if there is a new version after the creation or the fix of the ticket
     }
 
-    /**Make consistency the inconsistency tickets. A ticket is */
+    /**Make consistency the inconsistency tickets.*/
     private  void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull List<Ticket> consistentTickets) {
+        List<Ticket> ticketForProportion = new ArrayList<>();
 
-        double proportionValue;
-
-        if(consistentTickets.size() >= 5) {
-            proportionValue = Proportion.computeProportionValue(consistentTickets);
-        } else {
-            proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());
-        }
-        System.out.println("Proportion value: " + proportionValue);
         for(Ticket ticket: inconsistentTickets) {
+            double proportionValue = incrementalProportion(ticketForProportion);
+            System.out.println(proportionValue);
             adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
             if(isNotConsistent(ticket)) {
                 throw new RuntimeException(); //Create a new exception for the case when the ticket is not adjusted correctly
             }
             consistentTickets.add(ticket); //Add the adjusted ticket to the consistent list
+            if(Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
         }
+    }
+
+    private static double incrementalProportion(@NotNull List<Ticket> consistentTickets) {
+        double proportionValue;
+
+        if(consistentTickets.size() >= 5) {
+            proportionValue = Proportion.computeProportionValue(consistentTickets);
+        } else {
+            proportionValue = Proportion.computeColdStartProportionValue();
+        }
+        return proportionValue;
     }
 
     private void adjustTicket(Ticket ticket, double proportionValue) {

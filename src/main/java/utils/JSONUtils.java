@@ -1,6 +1,5 @@
-package util;
+package utils;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
