@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class VersionRetriever {
 
@@ -28,7 +29,6 @@ public class VersionRetriever {
         //Ignores releases with missing dates
         try {
             getVersions(projName);
-            //VersionUtil.printVersion(projVersions);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -55,7 +55,7 @@ public class VersionRetriever {
         }
     }
 
-    /**Get versions info from issues
+    /**Get versions info from issues.
     * */
     public List<Version> getAffectedVersions(@NotNull JSONArray versions) {
         String id;
@@ -64,7 +64,8 @@ public class VersionRetriever {
             if(versions.getJSONObject(i).has(RELEASE_DATE) && versions.getJSONObject(i).has("id")) {
                 id = versions.getJSONObject(i).get("id").toString();
                 Version v = searchVersion(id);
-                if(v == null) throw new RuntimeException(); //TODO Create a new exception or ignore the case with v == null
+                if(v == null) continue;
+                    //throw new RuntimeException(); //TODO Create a new exception or ignore the case with v == null
                 affectedVersions.add(v);
             }
         }
@@ -95,6 +96,18 @@ public class VersionRetriever {
         }
 
         return versionList;
+    }
+
+    public void deleteVersionWithoutCommits() {
+        projVersions.removeIf(Version::isCommitListEmpty);
+
+        projVersions.sort(Comparator.comparing(Version::getDate));
+        int i = 0;
+        for (Version v : projVersions) {
+            v.setIndex(i);
+            i++;
+        }
+
     }
 
     private void sortRelease(@NotNull List<Version> releases) {

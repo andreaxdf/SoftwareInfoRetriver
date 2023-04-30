@@ -25,17 +25,23 @@ public class MetricsRetriever {
      * @param commitRetriever Project commitRetriever.
      * @param versionRetriever Project versionRetriever.
      */
-    private static void computeBuggynessAndFixedDefects(List<ReleaseInfo> releaseInfoList, @NotNull List<Ticket> tickets, CommitRetriever commitRetriever, VersionRetriever versionRetriever) {
+    public static void computeBuggyness(List<ReleaseInfo> releaseInfoList, @NotNull List<Ticket> tickets, CommitRetriever commitRetriever, VersionRetriever versionRetriever) {
+        initializeBuggyness(releaseInfoList);
 
         for(Ticket ticket: tickets){
             computeBuggyness(releaseInfoList, commitRetriever, versionRetriever, ticket);
+        }
+    }
 
+    private static void computeFixedDefects(List<ReleaseInfo> releaseInfoList, @NotNull List<Ticket> tickets, CommitRetriever commitRetriever, VersionRetriever versionRetriever) {
+        for(Ticket ticket: tickets){
             //For each ticket, update the number of fixed defects of classes present in the last commit of the ticket (the fixed commit).
             JavaClassUtil.updateNumberOfFixedDefects(versionRetriever, ticket.getAssociatedCommits(), releaseInfoList, commitRetriever);
         }
     }
 
-    public static void computeBuggyness(List<ReleaseInfo> releaseInfoList, CommitRetriever commitRetriever, VersionRetriever versionRetriever, @NotNull Ticket ticket) {
+    private static void computeBuggyness(List<ReleaseInfo> releaseInfoList, CommitRetriever commitRetriever, VersionRetriever versionRetriever, @NotNull Ticket ticket) {
+
         for (RevCommit commit : ticket.getAssociatedCommits()) {
             //For each commit associated to a ticket, set all classes touched in commit as buggy in all the affected versions of the ticket.
             ReleaseInfo releaseInfo = VersionUtil.retrieveCommitRelease(
@@ -53,13 +59,22 @@ public class MetricsRetriever {
         }
     }
 
+    private static void initializeBuggyness(List<ReleaseInfo> releaseInfoList) {
+        for(ReleaseInfo releaseInfo: releaseInfoList) {
+            for(JavaClass javaClass: releaseInfo.getJavaClasses()) {
+                javaClass.getMetrics().setClassBuggyness(false);
+            }
+        }
+    }
+
 
     public static void computeMetrics(List<ReleaseInfo> releaseInfoList, @NotNull List<Ticket> tickets, CommitRetriever commitRetriever, VersionRetriever versionRetriever) {
 
         //Add the size metric in all the classes of the release.
         addSizeLabel(releaseInfoList);
         try {
-            computeBuggynessAndFixedDefects(releaseInfoList, tickets, commitRetriever, versionRetriever);
+            computeBuggyness(releaseInfoList, tickets, commitRetriever, versionRetriever);
+            computeFixedDefects(releaseInfoList, tickets, commitRetriever, versionRetriever);
             computeLocData(releaseInfoList, commitRetriever);
             computeNAuth(releaseInfoList);
         } catch (IOException e) {

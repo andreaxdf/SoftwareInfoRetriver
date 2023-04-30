@@ -117,6 +117,25 @@ public class CommitRetriever {
         return releaseCommits;
     }
 
+    /**
+     * This method assign commits to the correct version. In conclusion, remove the versions without any commits.
+     * @param projVersions List of the project versions.
+     */
+    public void associateCommitAndVersion(List<Version> projVersions) throws GitAPIException {
+
+        LocalDate lowerBound = LocalDate.of(1900, 1, 1);
+        for(Version version: projVersions) {
+            for(RevCommit commit: retrieveCommit()) {
+                LocalDate commitDate = GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen());
+                if ((commitDate.isBefore(version.getDate()) || commitDate.isEqual(version.getDate())) && commitDate.isAfter(lowerBound)) {
+                    version.addCommitToList(commit);
+                }
+            }
+            lowerBound = version.getDate();
+        }
+        versionRetriever.deleteVersionWithoutCommits();
+    }
+
     private @NotNull List<JavaClass> getClasses(@NotNull RevCommit commit) throws IOException {
 
         List<JavaClass> javaClasses = new ArrayList<>();
@@ -173,31 +192,6 @@ public class CommitRetriever {
         }
 
         return changedJavaClassList;
-    }
-
-    public String getContentOfClassByCommit(String className, @NotNull RevCommit commit) throws IOException {
-
-        RevTree tree = commit.getTree();
-        // Tree walk to iterate over all files in the Tree recursively
-
-        TreeWalk treeWalk = new TreeWalk(this.repo);
-
-        treeWalk.addTree(tree);
-
-        treeWalk.setRecursive(true);
-
-        while (treeWalk.next()) {
-            // We are keeping only Java classes that are not involved in tests
-            if (treeWalk.getPathString().equals(className)) {
-                String content = new String(this.repo.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8);
-                treeWalk.close();
-                return content;
-            }
-        }
-
-        treeWalk.close();
-        // If here it mean no class with name className is present
-        return null;
     }
 
     /**This method initializes two lists:

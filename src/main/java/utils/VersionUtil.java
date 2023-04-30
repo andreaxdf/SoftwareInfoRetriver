@@ -15,7 +15,8 @@ public class VersionUtil {
 
     public static void printVersion(List<Version> versionList) {
         for(Version version: versionList) {
-            System.out.println("Version: "
+            System.out.println("Version: " +
+                    + version.getIndex() + ", "
                     + version.getId() + ", "
                     + version.getName() + ", "
                     + version.getDate());

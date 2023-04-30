@@ -2,6 +2,7 @@ package retrivers;
 
 import model.Ticket;
 import model.Version;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,11 +24,26 @@ public class TicketRetriever {
     List<Ticket> tickets;
     boolean coldStart = false;
 
+    /**
+     * This is the constructor that you have to use for retrieve tickets without applying cold start.
+     * @param projName The project name from which retrieve tickets.
+     */
     public TicketRetriever(String projName) {
         init(projName);
+        try {
+            commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
+            commitRetriever.associateCommitAndVersion(versionRetriever.getProjVersions()); //Association of commits and versions and deletion of the version without commits
+            VersionUtil.printVersion(versionRetriever.projVersions);
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    /**Initialize TicketRetriever for cold start*/
+    /**
+     * This is the constructor that you have to use for retrieve tickets applying cold start.
+     * @param projName The project name from which retrieve tickets.
+     * @param coldStart The value used to specifying that you are using cold start. Must be true.
+     */
     public TicketRetriever(String projName, boolean coldStart) {
         this.coldStart = coldStart;
         init(projName);
@@ -39,13 +55,7 @@ public class TicketRetriever {
         String resolution = "fixed";
         try {
             versionRetriever = new VersionRetriever(projName);
-            tickets = retrieveBugTickets(projName, issueType, status, resolution);/*
-            System.out.println("Tickets estratti da " + projName + ": " + tickets.size());
-            int count = 0;
-            for(Ticket ticket: tickets) {
-                count += ticket.getAssociatedCommits().size();
-            }
-            System.out.println("Commits associati a tickets estratti da " + projName + ": " + count);*/
+            tickets = retrieveBugTickets(projName, issueType, status, resolution);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +110,6 @@ public class TicketRetriever {
             consistentTickets.sort(Comparator.comparing(Ticket::getResolutionDate));
             adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
             consistentTickets.sort(Comparator.comparing(Ticket::getCreationDate));
-            commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
             commitRetriever.associateTicketAndCommit(consistentTickets);
         }
         discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
@@ -119,9 +128,11 @@ public class TicketRetriever {
     private  void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull List<Ticket> consistentTickets) {
         List<Ticket> ticketForProportion = new ArrayList<>();
 
+        double oldValue = 0;
         for(Ticket ticket: inconsistentTickets) {
             double proportionValue = incrementalProportion(ticketForProportion);
-            System.out.println(proportionValue);
+            if(oldValue != proportionValue) System.out.println(proportionValue);
+            oldValue = proportionValue;
             adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
             if(isNotConsistent(ticket)) {
                 throw new RuntimeException(); //Create a new exception for the case when the ticket is not adjusted correctly

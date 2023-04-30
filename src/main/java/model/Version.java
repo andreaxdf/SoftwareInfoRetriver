@@ -1,14 +1,18 @@
 package model;
 
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Version {
     String id;
     int index;
     String name;
     LocalDate date;
+    List<RevCommit> commitList = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -28,6 +32,14 @@ public class Version {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    public boolean isCommitListEmpty() {
+        return commitList.isEmpty();
+    }
+
+    public void addCommitToList(RevCommit commit) {
+        this.commitList.add(commit);
     }
 
     public Version(String id, String name, @NotNull LocalDate date) {

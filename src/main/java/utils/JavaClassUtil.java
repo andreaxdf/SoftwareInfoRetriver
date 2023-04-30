@@ -36,7 +36,7 @@ public class JavaClassUtil {
     private static void findClassAndSetBuggyness(ChangedJavaClass className, @NotNull List<JavaClass> javaClasses) {
         for(JavaClass javaClass: javaClasses) {
             if(Objects.equals(javaClass.getName(), className.getJavaClassName())) {
-                javaClass.getMetrics().setClassBuggyness();
+                javaClass.getMetrics().setClassBuggyness(true);
                 return;
             }
         }

@@ -15,8 +15,8 @@ public class Metrics {
     private int fixedDefects = 0;
     private int nAuth;
 
-    public void setClassBuggyness() {
-        this.buggyness = true;
+    public void setClassBuggyness(boolean b) {
+        this.buggyness = b;
     }
 
     public boolean isBuggyness() {
