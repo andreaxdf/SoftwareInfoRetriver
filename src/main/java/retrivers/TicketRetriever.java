@@ -107,9 +107,11 @@ public class TicketRetriever {
         } while (i < total);
 
         if(!coldStart) {
-            consistentTickets.sort(Comparator.comparing(Ticket::getResolutionDate));
             adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
             consistentTickets.sort(Comparator.comparing(Ticket::getCreationDate));
+            if(commitRetriever == null) {
+                commitRetriever = new CommitRetriever("/home/andrea/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
+            }
             commitRetriever.associateTicketAndCommit(consistentTickets);
         }
         discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
@@ -118,7 +120,7 @@ public class TicketRetriever {
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/
-    private void discardInvalidTicket(ArrayList<Ticket> tickets) {
+    private void discardInvalidTicket(@NotNull ArrayList<Ticket> tickets) {
         tickets.removeIf(ticket -> ticket.getOpeningRelease().getIndex() > ticket.getFixedRelease().getIndex() ||   //Discard if OV > FV
                 ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex() || //Discard if IV >= OV
                 (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if there is a new version after the creation or the fix of the ticket
@@ -127,18 +129,28 @@ public class TicketRetriever {
     /**Make consistency the inconsistency tickets.*/
     private  void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull List<Ticket> consistentTickets) {
         List<Ticket> ticketForProportion = new ArrayList<>();
+        List<Ticket> allTickets = new ArrayList<>();
+
+        allTickets.addAll(inconsistentTickets);
+        allTickets.addAll(consistentTickets);
+
+        allTickets.sort(Comparator.comparing(Ticket::getResolutionDate));
 
         double oldValue = 0;
-        for(Ticket ticket: inconsistentTickets) {
-            double proportionValue = incrementalProportion(ticketForProportion);
-            if(oldValue != proportionValue) System.out.println(proportionValue);
-            oldValue = proportionValue;
-            adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
+        for(Ticket ticket: allTickets) {
+            double proportionValue;
+            if(inconsistentTickets.contains(ticket)) {  //If the ticket is in the inconsistent tickets list, then adjust the ticket using proportion.
+                proportionValue = incrementalProportion(ticketForProportion);
+                if (oldValue != proportionValue) System.out.println(proportionValue);
+                oldValue = proportionValue;
+                adjustTicket(ticket, proportionValue); //Use proportion to compute the IV
+            } else if(consistentTickets.contains(ticket)) {
+                if(Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
+            }
             if(isNotConsistent(ticket)) {
-                throw new RuntimeException(); //Create a new exception for the case when the ticket is not adjusted correctly
+                throw new RuntimeException(); //Create a new exception for the case when the ticket is still not correct
             }
             consistentTickets.add(ticket); //Add the adjusted ticket to the consistent list
-            if(Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
         }
     }
 
