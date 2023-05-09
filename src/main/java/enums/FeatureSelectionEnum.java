@@ -1,7 +1,7 @@
 package enums;
 
 public enum FeatureSelectionEnum {
-    GREEDY_BACKWARD_SEARCH,
-    BEST_FIRST,
+    BEST_FIRST_FORWARD,
+    BEST_FIRST_BACKWARD,
     NONE
 }
