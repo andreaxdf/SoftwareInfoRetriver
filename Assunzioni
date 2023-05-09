@@ -1,10 +1,9 @@
 Assunzioni del progetto:
-- Considero nel calcolo del valore di proportion soltanto gli issue con OV != FV (altrimenti il denominatore sarebbe 0).
+- Effettuo il calcolo di proportion considerando il denominatore della formula pari ad 1 nel caso in cui gli issues abbiano OV == FV.
 - Arrotondo l'indice della injected release calcolata con proportion per difetto.
 - Assumo che i ticket risolti nello stesso giorno dell'uscita di una nuova release siano risolti in quella release.
 - Calcolo la fixed version come la versione successiva alla resolutionDate del ticket su Jira e la opening version come la versione successiva alla createDate del ticket su Jira.
-- Effettuo il calcolo di proportion su tutte le repository conosciute, anche quelle successive alla versione alla cui stiamo applicando proportion.
-- Considero la data di rilascio delle versioni per ordinarle.
-- Se in un commit sono menzionati più tickets, considero il commit come risolutore di tutti i ticket menzionati.
-- Per il calcolo delle LOC aggiunte, considero soltanto le linee di codice derivanti da modifiche della classe e non dalla creazione. Quindi le LOC iniziali non sono considerate.
-- Calcolo il valore di incremental proportion utilizzando tutti i tickets precedenti al ticket che sto considerando.
+- Per ordinare le versioni prendo come riferimento la loro data di rilascio.
+- Se in un commit vengono menzionati più tickets, considero il commit come risolutore di tutti i ticket menzionati.
+- Calcolo il valore di incremental proportion utilizzando tutti i tickets validi precedenti al ticket che sto considerando. Un ticket è valido se ha iv < ov < fv.
+- Nel calcolo delle LOC vengono considerate anche quelle vuote o di commento.

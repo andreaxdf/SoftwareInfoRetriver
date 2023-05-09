@@ -50,7 +50,12 @@ public class Proportion {
             int ov = ticket.getOpeningRelease().getIndex();
             int fv = ticket.getFixedRelease().getIndex();
             if(isAValidTicketForProportion(ticket)) {
-                double prop = (1.0) * (fv - iv) / (fv - ov);
+                double prop;
+                if(fv == ov) {
+                    prop = (1.0) * (fv - iv);
+                } else {
+                    prop = (1.0) * (fv - iv) / (fv - ov);
+                }
                 proportionSum = proportionSum + prop;
                 validatedCount++;
             }
@@ -60,9 +65,11 @@ public class Proportion {
     }
 
     public static boolean isAValidTicketForProportion(Ticket ticket) {
+
+        if(ticket.getInjectedRelease() == null || ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null) return false;
+
         int iv = ticket.getInjectedRelease().getIndex();
         int ov = ticket.getOpeningRelease().getIndex();
-        int fv = ticket.getFixedRelease().getIndex();
-        return fv != ov && ov != iv;
+        return ov != iv;
     }
 }

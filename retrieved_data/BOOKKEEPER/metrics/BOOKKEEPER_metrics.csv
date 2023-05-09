@@ -1,4 +1,4 @@
-VERSION,JAVA_CLASS,SIZE,LOC_ADDED,MAX_LOC_ADDED,AVG_LOC_ADDED,LOC_DELETED,MAX_LOC_DELETED,AVG_LOC_DELETED,CHURN,MAX_CHURN,AVG_CHURN,FIXED_DEFECTS,NUMBER_OF_COMMITS,NUMBER_OF_AUTHORS,IS_BUGGY,
+VERSION,JAVA_CLASS,SIZE,LOC_ADDED,MAX_LOC_ADDED,AVG_LOC_ADDED,LOC_DELETED,MAX_LOC_DELETED,AVG_LOC_DELETED,CHURN,MAX_CHURN,AVG_CHURN,FIXED_DEFECTS,NUMBER_OF_COMMITS,NUMBER_OF_AUTHORS,IS_BUGGY
 0,bookkeeper-benchmark/src/main/java/org/apache/bookkeeper/benchmark/MySqlClient.java,137,235,137,58.75,98,94,24.5,139,137,34.75,0,4,2,False
 0,bookkeeper-benchmark/src/main/java/org/apache/bookkeeper/benchmark/TestClient.java,244,340,252,68.0,96,64,19.2,262,252,52.4,0,5,2,False
 0,bookkeeper-server/src/main/java/org/apache/bookkeeper/bookie/Bookie.java,1026,1246,545,89.0,220,81,15.714285714285714,1026,545,73.28571428571429,0,14,3,True
@@ -1569,9 +1569,9 @@ VERSION,JAVA_CLASS,SIZE,LOC_ADDED,MAX_LOC_ADDED,AVG_LOC_ADDED,LOC_DELETED,MAX_LO
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/processor/RequestProcessor.java,43,43,43,43.0,0,0,0.0,43,43,43.0,0,1,1,False
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BKStats.java,248,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,False
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieClient.java,310,44,20,14.666666666666666,20,14,6.666666666666667,24,9,8.0,2,3,1,True
-5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieNettyServer.java,199,32,25,10.666666666666666,18,13,6.0,14,12,4.666666666666667,0,3,2,True
-5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieProtoEncoding.java,194,1,1,1.0,1,1,1.0,0,0,0.0,0,1,1,True
-5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieProtocol.java,346,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,True
+5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieNettyServer.java,199,32,25,10.666666666666666,18,13,6.0,14,12,4.666666666666667,0,3,2,False
+5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieProtoEncoding.java,194,1,1,1.0,1,1,1.0,0,0,0.0,0,1,1,False
+5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieProtocol.java,346,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,False
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieRequestHandler.java,90,7,6,3.5,226,225,113.0,219,219,109.5,0,2,2,False
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieRequestProcessor.java,335,335,335,335.0,0,0,0.0,335,335,335.0,0,1,1,True
 5,bookkeeper-server/src/main/java/org/apache/bookkeeper/proto/BookieServer.java,372,12,7,3.0,3,1,0.75,9,6,2.25,1,4,3,False
