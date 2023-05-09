@@ -1,13 +1,10 @@
 package retrivers;
 
-import enums.CostSensitiveEnum;
-import enums.FeatureSelectionEnum;
-import enums.FilenamesEnum;
-import enums.SamplingEnum;
+import enums.*;
 import model.ClassifierEvaluation;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import utils.FileUtils;
-import view.FileCreator;
 import weka.attributeSelection.*;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -19,18 +16,16 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
-import weka.filters.supervised.instance.ClassBalancer;
 import weka.filters.supervised.instance.Resample;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class WekaInfoRetriever {
-
-    private static final String RANDOM_FOREST = "Random Forest";
-    private static final String NAIVE_BAYES = "Naive Bayes";
-    private static final String IBK = "IBk";
 
     private final String projName;
     private final int numIter;
@@ -44,31 +39,19 @@ public class WekaInfoRetriever {
 
         Map<String, List<ClassifierEvaluation>> classifiersListMap = new HashMap<>();
 
-        classifiersListMap.put(RANDOM_FOREST, new ArrayList<>());
-
-        classifiersListMap.put(IBK, new ArrayList<>());
-
-        classifiersListMap.put(NAIVE_BAYES, new ArrayList<>());
+        for(ClassifiersEnum classifierName: ClassifiersEnum.values()) {
+            classifiersListMap.put(classifierName.name(), new ArrayList<>());
+        }
 
         for(int i=1; i<=this.numIter; i++) {
 
-            Classifier randomForestClassifier = new RandomForest();
-            Classifier iBkClassifier = new IBk();
-            Classifier naiveBayesClassifier = new NaiveBayes();
-
-            Map<Classifier, String> classifierNameMap = new HashMap<>();
-
-            classifierNameMap.put(randomForestClassifier, RANDOM_FOREST);
-            classifierNameMap.put(iBkClassifier, IBK);
-            classifierNameMap.put(naiveBayesClassifier, NAIVE_BAYES);
-
-            for(Classifier classifier: classifierNameMap.keySet()) {
+            for(ClassifiersEnum classifierName: ClassifiersEnum.values()) {
                 for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {   //Iterate on all feature selection mode
                     for (SamplingEnum samplingEnum : SamplingEnum.values()) {       //Iterate on all sampling mode
                         for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {    //Iterate on all cost sensitive mode
                             //Evaluate the classifier
-                            classifiersListMap.get(classifierNameMap.get(classifier))  //Get the list associated to the actual classifier
-                                    .add(useClassifier(i, projName, classifier, classifierNameMap.get(classifier), featureSelectionEnum, samplingEnum, costSensitiveEnum)); //Evaluate the classifier
+                            classifiersListMap.get(classifierName.name())  //Get the list associated to the actual classifier
+                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum)); //Evaluate the classifier
                        }
                     }
                 }
@@ -84,7 +67,9 @@ public class WekaInfoRetriever {
         return classifierEvaluationList;
     }
 
-    private @NotNull ClassifierEvaluation useClassifier(int index, String projName, Classifier classifier, String classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
+    private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifiersEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
+
+        Classifier classifier = getClassifierByEnum(classifierName);
 
         DataSource source1 = new DataSource(Path.of("retrieved_data", projName, "training", FileUtils.getArffFilename(FilenamesEnum.TRAINING, projName, index)).toString());
         DataSource source2 = new DataSource(Path.of("retrieved_data", projName, "testing",  FileUtils.getArffFilename(FilenamesEnum.TESTING, projName, index)).toString());
@@ -171,7 +156,7 @@ public class WekaInfoRetriever {
 
         classifier.buildClassifier(training);
         eval.evaluateModel(classifier, testing);
-        ClassifierEvaluation simpleRandomForest = new ClassifierEvaluation(this.projName, index, classifierName, featureSelection, sampling, costSensitive);
+        ClassifierEvaluation simpleRandomForest = new ClassifierEvaluation(this.projName, index, classifierName.name(), featureSelection, sampling, costSensitive);
         simpleRandomForest.setTrainingPercent(100.0 * training.numInstances() / (training.numInstances() + testing.numInstances()));
         simpleRandomForest.setPrecision(eval.precision(0));
         simpleRandomForest.setRecall(eval.recall(0));
@@ -182,6 +167,22 @@ public class WekaInfoRetriever {
         simpleRandomForest.setTn(eval.numTrueNegatives(0));
         simpleRandomForest.setFn(eval.numFalseNegatives(0));
         return simpleRandomForest;
+    }
+
+    private Classifier getClassifierByEnum(@NotNull ClassifiersEnum classifierName) {
+        switch (classifierName) {
+            case IBK -> {
+                return new IBk();
+            }
+            case NAIVE_BAYES -> {
+                return new NaiveBayes();
+            }
+            case RANDOM_FOREST -> {
+                return new RandomForest();
+            }
+        }
+
+        return null;
     }
 
     /**
