@@ -19,6 +19,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.supervised.instance.Resample;
+import weka.filters.supervised.instance.SMOTE;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.nio.file.Path;
@@ -85,17 +86,21 @@ public class WekaInfoRetriever {
         switch (featureSelection) {
             case BEST_FIRST_FORWARD -> {
                 //FEATURE SELECTION WITH BEST FIRST FORWARD TECNIQUE
-                AttributeSelection filter = getBestFirstAttributeSelection("-D 1 -N 5");
+                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 1 -N 5");
 
                 classifier = getFilteredClassifier(classifier, filter);
             }
             case BEST_FIRST_BACKWARD -> {
                 //FEATURE SELECTION WITH BEST FIRST BACKWARD TECNIQUE
-                AttributeSelection filter = getBestFirstAttributeSelection("-D 0 -N 5");
+                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
 
                 classifier = getFilteredClassifier(classifier, filter);
             }
         }
+
+        int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
+        int numberOfFalse = nominalCounts[1];
+        int numberOfTrue = nominalCounts[0];
 
         //SAMPLING
         switch (sampling) {
@@ -109,9 +114,6 @@ public class WekaInfoRetriever {
             }
             case OVERSAMPLING -> {
                 //VALIDATION WITH OVERSAMPLING
-                int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
-                int numberOfFalse = nominalCounts[1];
-                int numberOfTrue = nominalCounts[0];
                 double proportionOfMajorityValue = (double) numberOfFalse / (numberOfFalse + numberOfTrue);
 
                 Resample resample = new Resample();
@@ -122,11 +124,21 @@ public class WekaInfoRetriever {
                 classifier = getFilteredClassifier(classifier, resample);
             }
             case SMOTE -> {
-                /*TODO SMOTE smote = new SMOTE();
+                double percentSMOTE;    //Percentage of oversampling (e.g. a percentage of 100% will cause a doubling of the instances of the minority class)
+                if(numberOfTrue==0 || numberOfTrue > numberOfFalse){
+                    percentSMOTE = 0;
+                }else{
+                    percentSMOTE = (100.0*(numberOfFalse-numberOfTrue))/numberOfTrue;
+                }
+                SMOTE smote = new SMOTE();
                 smote.setInputFormat(training);
-                smote.setClassValue("1");
-                smote.setPercentage(percentSMOTE);*/
+                smote.setOptions(Utils.splitOptions("-C 1 -K 5 -P " + percentSMOTE + " -S 1"));
+                if(numberOfTrue > 1)    //It is impossible assign 0 neighbors
+                    smote.setNearestNeighbors(Math.min(numberOfTrue - 1, 5));   //In this way, we avoid the problem that SMOTE needs al least 5 true instances.
+                else
+                    break;
 
+                classifier = getFilteredClassifier(classifier, smote);
             }
         }
 
@@ -158,11 +170,12 @@ public class WekaInfoRetriever {
     }
 
     @NotNull
-    private static AttributeSelection getBestFirstAttributeSelection(String quotedOptionString) throws Exception {
+    private static AttributeSelection getBestFirstAttributeSelection(Instances training, String quotedOptionString) throws Exception {
         AttributeSelection filter = new AttributeSelection();
         BestFirst search = new BestFirst();
         search.setOptions(Utils.splitOptions(quotedOptionString));
         filter.setSearch(search);
+        filter.setInputFormat(training);
         return filter;
     }
 
@@ -173,23 +186,20 @@ public class WekaInfoRetriever {
         filteredClassifier.setClassifier(classifier);
         filteredClassifier.setFilter(filter);
 
-        classifier = filteredClassifier;
-        return classifier;
+        return filteredClassifier;
     }
 
     private @NotNull Classifier getClassifierByEnum(@NotNull ClassifiersEnum classifierName) throws Exception {
         switch (classifierName) {
             case IBK -> {
-                IBk iBk = new IBk();
-                iBk.setOptions(Utils.splitOptions("-K 1 -W 0 -A \"weka.core.neighboursearch.LinearNNSearch -A \\\"weka.core.EuclideanDistance -R first-last\\\"\""));
-                return iBk;
+                return new IBk();
             }
             case NAIVE_BAYES -> {
                 return new NaiveBayes();
             }
             case RANDOM_FOREST -> {
                 RandomForest randomForest = new RandomForest();
-                randomForest.setOptions(Utils.splitOptions("-P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1"));
+                //randomForest.setOptions(Utils.splitOptions("-P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1"));
                 return randomForest;
             }
         }

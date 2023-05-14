@@ -7,3 +7,4 @@ Assunzioni del progetto:
 - Se in un commit vengono menzionati più tickets, considero il commit come risolutore di tutti i ticket menzionati.
 - Calcolo il valore di incremental proportion utilizzando tutti i tickets validi precedenti al ticket che sto considerando. Un ticket è valido se ha iv < ov < fv.
 - Nel calcolo delle LOC vengono considerate anche quelle vuote o di commento.
+- SMOTE viene utilizzato soltanto se il numero di istanze true è maggiore di 1. Di default ha bisogno di almeno 5 istanze true, ma ho aggiunto un controllo che regola questo numero dinamicamente.
