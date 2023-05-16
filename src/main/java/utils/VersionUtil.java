@@ -13,16 +13,6 @@ public class VersionUtil {
 
     private VersionUtil() {}
 
-    public static void printVersion(List<Version> versionList) {
-        for(Version version: versionList) {
-            System.out.println("Version: " +
-                    + version.getIndex() + ", "
-                    + version.getId() + ", "
-                    + version.getName() + ", "
-                    + version.getDate());
-        }
-    }
-
     public static @Nullable Version retrieveNextRelease(VersionRetriever versionRetriever, LocalDate date) {
         for(Version version : versionRetriever.getProjVersions()) {
             LocalDate releaseDate = version.getDate();

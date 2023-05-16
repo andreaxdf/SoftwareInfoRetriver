@@ -30,9 +30,6 @@ public class Ticket {
     }
 
     public void setVersionRetriever(VersionRetriever versionRetriever) {
-        if(versionRetriever == null) {
-            throw new RuntimeException();
-        }
         this.versionRetriever = versionRetriever;
     }
 
@@ -51,10 +48,6 @@ public class Ticket {
         }
 
         this.lastCommit = com;
-    }
-
-    public RevCommit getLastCommit() {
-        return lastCommit;
     }
 
     public LocalDate getResolutionDate() {

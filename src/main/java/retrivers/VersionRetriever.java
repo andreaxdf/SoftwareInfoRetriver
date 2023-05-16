@@ -8,12 +8,12 @@ import org.json.JSONObject;
 import utils.JSONUtils;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 public class VersionRetriever {
 
@@ -24,17 +24,14 @@ public class VersionRetriever {
         return projVersions;
     }
 
-    public VersionRetriever(String projName) {
+    public VersionRetriever(String projName) throws IOException, URISyntaxException {
         //Fills the arraylist with releases dates and orders them
         //Ignores releases with missing dates
-        try {
-            getVersions(projName);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        getVersions(projName);
+
     }
 
-    private void getVersions(String projName) throws IOException {
+    private void getVersions(String projName) throws IOException, URISyntaxException {
 
         String url = "https://issues.apache.org/jira/rest/api/2/project/" + projName;
         JSONObject json = JSONUtils.readJsonFromUrl(url);
@@ -65,7 +62,7 @@ public class VersionRetriever {
                 id = versions.getJSONObject(i).get("id").toString();
                 Version v = searchVersion(id);
                 if(v == null) continue;
-                    //throw new RuntimeException(); //TODO Create a new exception or ignore the case with v == null
+
                 affectedVersions.add(v);
             }
         }

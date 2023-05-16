@@ -45,26 +45,30 @@ public class WekaInfoRetriever {
 
         for(int i=1; i<=this.numIter; i++) {    //For each iteration
 
-            for(ClassifiersEnum classifierName: ClassifiersEnum.values()) { //For each classifier
-                for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {   //Iterate on all feature selection mode
-                    for (SamplingEnum samplingEnum : SamplingEnum.values()) {       //Iterate on all sampling mode
-                        for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {    //Iterate on all cost sensitive mode
-                            //Evaluate the classifier
-                            classifiersListMap.get(classifierName.name())  //Get the list associated to the actual classifier
-                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum)); //Evaluate the classifier
-                       }
-                    }
-                }
-            }
+            computeIteration(projName, classifiersListMap, i);
         }
 
         List<ClassifierEvaluation> classifierEvaluationList = new ArrayList<>();
 
-        for(String classifierName: classifiersListMap.keySet()) {
-            classifierEvaluationList.addAll(classifiersListMap.get(classifierName));
+        for(Map.Entry<String, List<ClassifierEvaluation>> classifierName: classifiersListMap.entrySet()) {
+            classifierEvaluationList.addAll(classifiersListMap.get(classifierName.getKey()));
         }
 
         return classifierEvaluationList;
+    }
+
+    private void computeIteration(String projName, Map<String, List<ClassifierEvaluation>> classifiersListMap, int i) throws Exception {
+        for(ClassifiersEnum classifierName: ClassifiersEnum.values()) { //For each classifier
+            for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {   //Iterate on all feature selection mode
+                for (SamplingEnum samplingEnum : SamplingEnum.values()) {       //Iterate on all sampling mode
+                    for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {    //Iterate on all cost sensitive mode
+                        //Evaluate the classifier
+                        classifiersListMap.get(classifierName.name())  //Get the list associated to the actual classifier
+                                .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum)); //Evaluate the classifier
+                   }
+                }
+            }
+        }
     }
 
     private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifiersEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
@@ -96,6 +100,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, filter);
             }
+            case NONE -> {}
         }
 
         int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
@@ -140,6 +145,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, smote);
             }
+            case NONE -> {}
         }
 
         //COST SENSITIVE
@@ -154,6 +160,7 @@ public class WekaInfoRetriever {
             classifier = costSensitiveClassifier;
         }
 
+        assert classifier != null;
         classifier.buildClassifier(training);
         eval.evaluateModel(classifier, testing);
         ClassifierEvaluation simpleRandomForest = new ClassifierEvaluation(this.projName, index, classifierName.name(), featureSelection, sampling, costSensitive);
@@ -189,7 +196,7 @@ public class WekaInfoRetriever {
         return filteredClassifier;
     }
 
-    private @NotNull Classifier getClassifierByEnum(@NotNull ClassifiersEnum classifierName) throws Exception {
+    private Classifier getClassifierByEnum(@NotNull ClassifiersEnum classifierName) {
         switch (classifierName) {
             case IBK -> {
                 return new IBk();
@@ -198,13 +205,11 @@ public class WekaInfoRetriever {
                 return new NaiveBayes();
             }
             case RANDOM_FOREST -> {
-                RandomForest randomForest = new RandomForest();
-                //randomForest.setOptions(Utils.splitOptions("-P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1"));
-                return randomForest;
+                return new RandomForest();
             }
         }
 
-        throw new RuntimeException();
+        return null;
     }
 
     private static CostMatrix getCostMatrix() {

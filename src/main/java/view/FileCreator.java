@@ -26,7 +26,7 @@ public class FileCreator {
         File file = new File(pathname.toUri());
 
         if(!dir.exists() && !file.mkdirs()) {
-            throw new RuntimeException(); //Exception: dir creation impossible
+            throw new IOException(); //Exception: dir creation impossible
         }
 
         if(file.exists() && !file.delete()) {
