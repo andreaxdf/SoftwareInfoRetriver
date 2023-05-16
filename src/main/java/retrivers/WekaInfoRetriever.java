@@ -100,7 +100,9 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, filter);
             }
-            case NONE -> {}
+            case NONE -> {
+                //NO FEATURE SELECTION
+            }
         }
 
         int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
@@ -145,7 +147,9 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, smote);
             }
-            case NONE -> {}
+            case NONE -> {
+                //NO SAMPLING
+            }
         }
 
         //COST SENSITIVE
