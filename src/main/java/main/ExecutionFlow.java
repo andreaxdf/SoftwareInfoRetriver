@@ -56,7 +56,8 @@ public class ExecutionFlow {
             ArrayList<ReleaseInfo> testingRelease = new ArrayList<>();
             testingRelease.add(releaseInfoListHalved.get(i));
             FileCreator.writeOnArff(projName, testingRelease, FilenamesEnum.TESTING, i);
-            logger.info(i + ") Iteration completed.");
+            int finalI = i;
+            logger.info(() -> finalI + ") Iteration completed.");
         }
         logger.info("Arff file created.");
         logger.info("Starting Weka evaluation.");
