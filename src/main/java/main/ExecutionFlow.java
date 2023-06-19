@@ -11,8 +11,12 @@ import view.FileCreator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ExecutionFlow {
+    private static final Logger logger = Logger.getLogger(ExecutionFlow.class.getName());
+
+
 
     private ExecutionFlow() {}
 
@@ -24,19 +28,19 @@ public class ExecutionFlow {
 
         //Retrieve of all project tickets that are valid ticket.
         List<Ticket> tickets = ticketRetriever.getTickets();
-        System.out.println("Tickets retrieved.");
+        logger.info("Tickets retrieved.");
 
         //Retrieve the release information about commits, classes and metrics that involve the release.
         List<ReleaseInfo> allTheReleaseInfo = commitRetriever.getReleaseCommits(versionRetriever, commitRetriever.retrieveCommit());
-        System.out.println("Information about commits retrieved.");
+        logger.info("Information about commits retrieved.");
         MetricsRetriever.computeMetrics(allTheReleaseInfo, tickets, commitRetriever, versionRetriever);
-        System.out.println("Metrics computed.");
+        logger.info("Metrics computed.");
         FileCreator.writeOnCsv(projName, allTheReleaseInfo, FilenamesEnum.METRICS, 0);
-        System.out.println("Csv file created.");
+        logger.info("Csv file created.");
 
         //----------------------------------------------------------- WALK FORWARD -----------------------------------------------------------
 
-        System.out.println("Starting walk forward.");
+        logger.info("Starting walk forward.");
 
         List<ReleaseInfo> releaseInfoListHalved = discardHalfReleases(allTheReleaseInfo);
 
@@ -52,14 +56,14 @@ public class ExecutionFlow {
             ArrayList<ReleaseInfo> testingRelease = new ArrayList<>();
             testingRelease.add(releaseInfoListHalved.get(i));
             FileCreator.writeOnArff(projName, testingRelease, FilenamesEnum.TESTING, i);
-            System.out.println(i + ") Iteration completed.");
+            logger.info(i + ") Iteration completed.");
         }
-        System.out.println("Arff file created.");
-        System.out.println("Starting Weka evaluation.");
+        logger.info("Arff file created.");
+        logger.info("Starting Weka evaluation.");
         WekaInfoRetriever wekaInfoRetriever = new WekaInfoRetriever(projName, allTheReleaseInfo.size()/2);
         List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projName);
         FileCreator.writeEvaluationDataOnCsv(projName, classifierEvaluationList);
-        System.out.println("Finished Weka evaluation.");
+        logger.info("Finished Weka evaluation.");
 
     }
 
