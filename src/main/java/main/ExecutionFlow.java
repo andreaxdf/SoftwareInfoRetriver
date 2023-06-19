@@ -24,13 +24,19 @@ public class ExecutionFlow {
 
         //Retrieve of all project tickets that are valid ticket.
         List<Ticket> tickets = ticketRetriever.getTickets();
+        System.out.println("Tickets retrieved.");
 
         //Retrieve the release information about commits, classes and metrics that involve the release.
         List<ReleaseInfo> allTheReleaseInfo = commitRetriever.getReleaseCommits(versionRetriever, commitRetriever.retrieveCommit());
+        System.out.println("Information about commits retrieved.");
         MetricsRetriever.computeMetrics(allTheReleaseInfo, tickets, commitRetriever, versionRetriever);
+        System.out.println("Metrics computed.");
         FileCreator.writeOnCsv(projName, allTheReleaseInfo, FilenamesEnum.METRICS, 0);
+        System.out.println("Csv file created.");
 
         //----------------------------------------------------------- WALK FORWARD -----------------------------------------------------------
+
+        System.out.println("Starting walk forward.");
 
         List<ReleaseInfo> releaseInfoListHalved = discardHalfReleases(allTheReleaseInfo);
 
@@ -46,10 +52,14 @@ public class ExecutionFlow {
             ArrayList<ReleaseInfo> testingRelease = new ArrayList<>();
             testingRelease.add(releaseInfoListHalved.get(i));
             FileCreator.writeOnArff(projName, testingRelease, FilenamesEnum.TESTING, i);
+            System.out.println(i + ") Iteration completed.");
         }
+        System.out.println("Arff file created.");
+        System.out.println("Starting Weka evaluation.");
         WekaInfoRetriever wekaInfoRetriever = new WekaInfoRetriever(projName, allTheReleaseInfo.size()/2);
         List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projName);
         FileCreator.writeEvaluationDataOnCsv(projName, classifierEvaluationList);
+        System.out.println("Finished Weka evaluation.");
 
     }
 

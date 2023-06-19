@@ -22,7 +22,9 @@ public class Proportion {
         List<Double> proportionValueList = new ArrayList<>();
 
         for(ProjectsEnum proj: ProjectsEnum.values()) {
-            proportionValueList.add(computeProportionValue(ColdStart.getTicketForColdStart(proj)));
+            double p = computeProportionValue(ColdStart.getTicketForColdStart(proj));
+            if(p != 0)
+                proportionValueList.add(p);
         }
 
         coldStartProportionValue = computeMedian(proportionValueList);
