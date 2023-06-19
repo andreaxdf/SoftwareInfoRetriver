@@ -65,6 +65,8 @@ public class Proportion {
                 validatedCount++;
             }
         }
+        if(validatedCount == 0)
+            return 0;
 
         return proportionSum/validatedCount;
     }
